@@ -7,6 +7,7 @@
 - https://www.st.com/en/evaluation-tools/nucleo-f401re.html#documentation
 - https://www.st.com/resource/en/datasheet/stm32f401re.pdf
 - https://www.st.com/resource/en/user_manual/um1725-description-of-stm32f4-hal-and-lowlayer-drivers-stmicroelectronics.pdf
+- https://github.com/ussserrr/stm32pio
 
 ## Réu
 - estimer la trajectoir de la bestiole
