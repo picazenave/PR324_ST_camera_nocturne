@@ -6,6 +6,7 @@
 - https://github.com/STMicroelectronics
 - https://www.st.com/en/evaluation-tools/nucleo-f401re.html#documentation
 - https://www.st.com/resource/en/datasheet/stm32f401re.pdf
+- https://www.st.com/resource/en/reference_manual/rm0368-stm32f401xbc-and-stm32f401xde-advanced-armbased-32bit-mcus-stmicroelectronics.pdf
 - https://www.st.com/resource/en/user_manual/um1725-description-of-stm32f4-hal-and-lowlayer-drivers-stmicroelectronics.pdf
 
 ## Réu
