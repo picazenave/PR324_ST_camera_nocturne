@@ -1,0 +1,37 @@
+<mxfile host="65bd71144e">
+    <diagram id="xL_BWmeiPKbXJHwfIOVd" name="Page-1">
+        <mxGraphModel dx="1775" dy="1094" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Carte de développement&lt;br&gt;&lt;br&gt;NUCLEO-F401RE" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="240" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="Capteur ToF&lt;br&gt;&lt;br&gt;X-NUCLEO-53L5A1" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="80" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="Capteur Sonore&lt;br&gt;&lt;br&gt;X-NUCLEO-CCA02M2" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="200" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="Capteur PIR 1&lt;br&gt;&lt;br&gt;SEEED STUDIO 101020353" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="320" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="Capteur PIR 2&lt;br&gt;&lt;br&gt;ONSEMI PIR-GEVB" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="440" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="Capteur Lumière&lt;br&gt;&lt;br&gt;SEEED STUDIO 101020132" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="560" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="Camera 1&lt;br&gt;&lt;br&gt;B-CAMS-OMV" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-200" y="210" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="Camera 2&lt;br&gt;&lt;br&gt;OV5640 ADA5673" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-200" y="320" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="Led IR&lt;br&gt;&lt;br&gt;ILH-IO01-85NL-SC201-WIR200" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-200" y="440" width="160" height="80" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
