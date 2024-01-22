@@ -1,35 +1,58 @@
 <mxfile host="65bd71144e">
     <diagram id="xL_BWmeiPKbXJHwfIOVd" name="Page-1">
-        <mxGraphModel dx="1775" dy="1094" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="1891" dy="781" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="2" value="Carte de développement&lt;br&gt;&lt;br&gt;NUCLEO-F401RE" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="21" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" style="edgeStyle=none;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="15">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="270" y="620" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="25" style="edgeStyle=none;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="16">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="19">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="Carte de développement&lt;br&gt;&lt;br&gt;NUCLEO-F401RE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
                     <mxGeometry x="40" y="240" width="160" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="Capteur ToF&lt;br&gt;&lt;br&gt;X-NUCLEO-53L5A1" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="3" value="Capteur ToF&lt;br&gt;&lt;br&gt;X-NUCLEO-53L5A1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" parent="1" vertex="1">
                     <mxGeometry x="280" y="80" width="160" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="Capteur Sonore&lt;br&gt;&lt;br&gt;X-NUCLEO-CCA02M2" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="4" value="Capteur Sonore&lt;br&gt;&lt;br&gt;X-NUCLEO-CCA02M2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" parent="1" vertex="1">
                     <mxGeometry x="280" y="200" width="160" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="Capteur PIR 1&lt;br&gt;&lt;br&gt;SEEED STUDIO 101020353" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="5" value="Capteur PIR 1&lt;br&gt;&lt;br&gt;SEEED STUDIO 101020353" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" parent="1" vertex="1">
                     <mxGeometry x="280" y="320" width="160" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="6" value="Capteur PIR 2&lt;br&gt;&lt;br&gt;ONSEMI PIR-GEVB" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="280" y="440" width="160" height="80" as="geometry"/>
+                <mxCell id="6" value="Capteur PIR 2&lt;br&gt;&lt;br&gt;ONSEMI PIR-GEVB" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="400" width="160" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="7" value="Capteur Lumière&lt;br&gt;&lt;br&gt;SEEED STUDIO 101020132" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="15" value="Capteur Lumière&lt;br&gt;&lt;br&gt;SEEED STUDIO 101020132" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#a20025;strokeColor=#6F0000;fontColor=#ffffff;" vertex="1" parent="1">
                     <mxGeometry x="280" y="560" width="160" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="9" value="Camera 1&lt;br&gt;&lt;br&gt;B-CAMS-OMV" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="-200" y="210" width="160" height="80" as="geometry"/>
+                <mxCell id="28" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="16" target="17">
+                    <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" value="Camera 2&lt;br&gt;&lt;br&gt;OV5640 ADA5673" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="-200" y="320" width="160" height="80" as="geometry"/>
+                <mxCell id="16" value="Camera 1&lt;br&gt;&lt;br&gt;B-CAMS-OMV" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" vertex="1" parent="1">
+                    <mxGeometry x="-200" y="200" width="160" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="11" value="Led IR&lt;br&gt;&lt;br&gt;ILH-IO01-85NL-SC201-WIR200" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="-200" y="440" width="160" height="80" as="geometry"/>
+                <mxCell id="17" value="Camera 2&lt;br&gt;&lt;br&gt;OV5640 ADA5673" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" vertex="1" parent="1">
+                    <mxGeometry x="-200" y="280" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="Led IR&lt;br&gt;&lt;br&gt;ILH-IO01-85NL-SC201-WIR200" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6d8764;strokeColor=#3A5431;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="-200" y="400" width="160" height="80" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
