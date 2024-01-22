@@ -13,3 +13,11 @@
 - tof traquer la bestiole pour capturer au centre/ le plus cadré possible
 - capteur particulier de ST pour PIR
 - 
+
+## Utiliser stm32pio
+
+Comment convertir cubeMX en platformio :
+- faire les modifs dans le .ioc (projet cubeMX)
+- enregistrer
+- ouvrir une terminal dans le dossier du projet cubeMX
+- faire `stm32pio generate`
