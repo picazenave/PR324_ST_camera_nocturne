@@ -39,7 +39,7 @@
 #define __VL53L5CX_CLASS_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "Arduino.h"
+//#include "Arduino.h"
 #include "platform.h"
 #include "vl53l5cx_api.h"
 #include "vl53l5cx_plugin_detection_thresholds.h"

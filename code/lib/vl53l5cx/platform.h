@@ -41,7 +41,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <Wire.h>
 #include "platform_config.h"
 
