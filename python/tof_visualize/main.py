@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 window_name='Tof matrix'
 
-ser = serial.Serial('COM6', 115200)
+ser = serial.Serial('COM6', 1000000)
 print(ser.name)
 ser.reset_input_buffer()
 ser.reset_output_buffer()
@@ -17,7 +17,7 @@ cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 tof_matrix_size=8,8
 
 counter=0
-end_counter=1024*2
+end_counter=1024*1
 time_loop=np.empty(end_counter)
 
 while(True):
