@@ -8,20 +8,24 @@ window_name='Tof matrix'
 
 ser = serial.Serial('COM6', 115200)
 print(ser.name)
+ser.reset_input_buffer()
+ser.reset_output_buffer()
 
 
 cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 
 tof_matrix_size=8,8
 
-time_loop=np.empty(1024*1)
 counter=0
-end_counter=1024*1-1
+end_counter=1024*2
+time_loop=np.empty(end_counter)
+
 while(True):
     start = time.time()
     ser.write(b'\x55')
     my_array = np.empty(64,dtype=np.uint8)
-    s = ser.read_until("\r\n",8*8+2)[:8*8]
+    s = ser.read(8*8)
+    #ser.reset_input_buffer() # loose synchro
     
     for i in range(64):
         my_array[i]=s[i]
@@ -32,11 +36,18 @@ while(True):
 
     time_loop[counter]=time.time()-start
     counter=counter+1
-    if counter == end_counter -1:
+    if counter == end_counter:
         break
 
-print('Mean FPS :'+ str(1/(sum(time_loop)/end_counter)))
+print('Mean FPS :'+ str(1./(sum(time_loop)/end_counter)))
+print('Min FPS :'+ str(1./max(time_loop)))
+print('Max FPS :'+ str(1./min(time_loop[time_loop != 0])))
 plt.plot(time_loop)
 plt.show()
 
+# packet = bytearray()
+# packet.append(0x41)
+# packet.append(0x42)
+# packet.append(0x43)
 
+# ser.write(packet)

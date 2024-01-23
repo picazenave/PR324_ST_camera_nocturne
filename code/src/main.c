@@ -103,7 +103,7 @@ int main(void)
     if (tick_count % 100 == 0)
       HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-    HAL_UART_Receive(&huart2, &uart_in, 1, 1000);
+    HAL_UART_Receive(&huart2, &uart_in, 1, 1);
     if (uart_in==0x55)
     {
 
@@ -111,11 +111,10 @@ int main(void)
       {
         for (uint8_t j = 0; j < 8; j++)
         {
-          tof_matrix[i + j * 8] += j + i;
+          tof_matrix[i + j * 8] += j + i+1;
         }
       }
       HAL_UART_Transmit(&huart2, tof_matrix, sizeof(tof_matrix), 1000);
-      HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", sizeof("\r\n") - 1, 1000);
     }
     tick_count++;
     /* USER CODE END WHILE */
