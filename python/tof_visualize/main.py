@@ -1,19 +1,38 @@
 import numpy as np
+import cv2
+import serial
+import time
 import matplotlib.pyplot as plt
+
+window_name='Tof matrix'
+
+ser = serial.Serial('COM6', 115200)
+print(ser.name)
+
+
+cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 
 tof_matrix_size=8,8
 
-fig, ax = plt.subplots()
+time_loop=np.empty(1024*1)
+counter=0
 
-min_val, max_val = 0, 15
+while(True):
+    start = time.time()
+    s = ser.read_until("\r\n",8*8+2)[:8*8]
+    my_array = np.empty(64,dtype=np.uint8)
+    for i in range(64):
+        my_array[i]=s[i]
+    tof_matrix=np.matrix(my_array.reshape(8,8))
 
-intersection_matrix = np.random.randint(0, 10, size=tof_matrix_size)
+    cv2.imshow(window_name, tof_matrix)
+    cv2.waitKey(1)  # it's needed, but no problem, it won't pause/wait
 
-ax.matshow(intersection_matrix, cmap=plt.cm.Blues)
+    time_loop[counter]=time.time()-start
+    counter=counter+1
+    if counter == (1024*1-2) :
+        break
 
-for i in range(tof_matrix_size[0]):
-    for j in range(tof_matrix_size[1]):
-        c = intersection_matrix[j,i]
-        ax.text(i, j, str(c), va='center', ha='center')
 
+plt.plot(time_loop)
 plt.show()
