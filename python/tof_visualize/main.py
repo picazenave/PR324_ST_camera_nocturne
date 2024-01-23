@@ -16,11 +16,13 @@ tof_matrix_size=8,8
 
 time_loop=np.empty(1024*1)
 counter=0
-
+end_counter=1024*1-1
 while(True):
     start = time.time()
-    s = ser.read_until("\r\n",8*8+2)[:8*8]
+    ser.write(b'\x55')
     my_array = np.empty(64,dtype=np.uint8)
+    s = ser.read_until("\r\n",8*8+2)[:8*8]
+    
     for i in range(64):
         my_array[i]=s[i]
     tof_matrix=np.matrix(my_array.reshape(8,8))
@@ -30,9 +32,11 @@ while(True):
 
     time_loop[counter]=time.time()-start
     counter=counter+1
-    if counter == (1024*1-2) :
+    if counter == end_counter -1:
         break
 
-
+print('Mean FPS :'+ str(1/(sum(time_loop)/end_counter)))
 plt.plot(time_loop)
 plt.show()
+
+

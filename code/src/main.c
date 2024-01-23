@@ -95,20 +95,29 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   uint8_t tof_matrix[8 * 8] = {0};
-  uint32_t tick_count=0;
+  uint32_t tick_count = 0;
+  uint8_t uart_in = 0;
   while (1)
   {
     // HAL_Delay(300);
-    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-    for (uint8_t i = 0; i < 8; i++)
+    if (tick_count % 100 == 0)
+      HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+
+    HAL_UART_Receive(&huart2, &uart_in, 1, 1000);
+    if (uart_in==0x55)
     {
-      for (uint8_t j = 0; j < 8; j++)
+
+      for (uint8_t i = 0; i < 8; i++)
       {
-        tof_matrix[i + j * 8] += j + i;
+        for (uint8_t j = 0; j < 8; j++)
+        {
+          tof_matrix[i + j * 8] += j + i;
+        }
       }
+      HAL_UART_Transmit(&huart2, tof_matrix, sizeof(tof_matrix), 1000);
+      HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", sizeof("\r\n") - 1, 1000);
     }
-    HAL_UART_Transmit(&huart2, tof_matrix, sizeof(tof_matrix), 1000);
-    HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", sizeof("\r\n") - 1, 1000);
+    tick_count++;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
