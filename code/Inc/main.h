@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32f4xx_hal_i2c.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -115,6 +115,8 @@ void Error_Handler(void);
 #define SD_CS_GPIO_Port GPIOB
 #define CAMERA_CS_Pin GPIO_PIN_6
 #define CAMERA_CS_GPIO_Port GPIOB
+#define CAMERA_SHUTTER_Pin GPIO_PIN_7
+#define CAMERA_SHUTTER_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
