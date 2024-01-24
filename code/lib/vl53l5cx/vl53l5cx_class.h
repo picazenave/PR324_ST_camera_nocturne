@@ -62,7 +62,7 @@ class VL53L5CX {
      * @param[in] lpn_pin pin to be used as component LPn
      * @param[in] i2c_rst_pin pin to be used as component I2C_RST
      */
-    VL53L5CX(TwoWire *i2c, int lpn_pin, int i2c_rst_pin = -1)
+    VL53L5CX(I2C_HandleTypeDef *i2c, int lpn_pin, int i2c_rst_pin = -1)
     {
       memset((void *)&_dev, 0x0, sizeof(VL53L5CX_Configuration));
       _dev.platform.address = VL53L5CX_DEFAULT_I2C_ADDRESS;
