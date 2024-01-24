@@ -41,8 +41,8 @@
 
 #include <stdint.h>
 #include <string.h>
-//#include <Arduino.h>
-#include <Wire.h>
+// #include <Arduino.h>
+// #include <Wire.h>
 #include "platform_config.h"
 
 
@@ -70,7 +70,7 @@
 typedef struct {
   uint16_t  address;
 
-  TwoWire *dev_i2c;
+  // TwoWire *dev_i2c;
 
   int lpn_pin;
 

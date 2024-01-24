@@ -46,7 +46,8 @@
 #include "vl53l5cx_plugin_motion_indicator.h"
 #include "vl53l5cx_plugin_xtalk.h"
 
-
+#include "stm32f4xx_hal.c"
+#include "stm32f4xx_hal.h"
 
 
 /* Classes -------------------------------------------------------------------*/
@@ -80,12 +81,15 @@ class VL53L5CX {
     virtual int begin()
     {
       if (_dev.platform.lpn_pin >= 0) {
-        pinMode(_dev.platform.lpn_pin, OUTPUT);
+        // pinMode(_dev.platform.lpn_pin, OUTPUT);  TODO
         digitalWrite(_dev.platform.lpn_pin, LOW);
+        HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PIN_SET)
+()
       }
       if (_dev.platform.i2c_rst_pin >= 0) {
-        pinMode(_dev.platform.i2c_rst_pin, OUTPUT);
+        // pinMode(_dev.platform.i2c_rst_pin, OUTPUT);  TODO
         digitalWrite(_dev.platform.i2c_rst_pin, LOW);
+        HAL_GPIO_TogglePin()
       }
       return 0;
     }
@@ -93,10 +97,10 @@ class VL53L5CX {
     virtual int end()
     {
       if (_dev.platform.lpn_pin >= 0) {
-        pinMode(_dev.platform.lpn_pin, INPUT);
+        // pinMode(_dev.platform.lpn_pin, INPUT);  TODO
       }
       if (_dev.platform.i2c_rst_pin >= 0) {
-        pinMode(_dev.platform.i2c_rst_pin, INPUT);
+        // pinMode(_dev.platform.i2c_rst_pin, INPUT);  TODO
       }
       return 0;
     }
