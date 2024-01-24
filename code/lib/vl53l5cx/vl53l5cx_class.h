@@ -47,8 +47,8 @@
 #include "vl53l5cx_plugin_xtalk.h"
 
 #include "main.h"
-#include "gpio.h"
-
+#include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_i2c.h"
 
 
 /* Classes -------------------------------------------------------------------*/
