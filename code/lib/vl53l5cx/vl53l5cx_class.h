@@ -46,8 +46,9 @@
 #include "vl53l5cx_plugin_motion_indicator.h"
 #include "vl53l5cx_plugin_xtalk.h"
 
-#include "stm32f4xx_hal.c"
-#include "stm32f4xx_hal.h"
+#include "main.h"
+#include "gpio.h"
+
 
 
 /* Classes -------------------------------------------------------------------*/
@@ -82,14 +83,13 @@ class VL53L5CX {
     {
       if (_dev.platform.lpn_pin >= 0) {
         // pinMode(_dev.platform.lpn_pin, OUTPUT);  TODO
-        digitalWrite(_dev.platform.lpn_pin, LOW);
-        HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PIN_SET)
-()
+        //digitalWrite(_dev.platform.lpn_pin, LOW);
+        HAL_GPIO_WritePin(TOF_LPn_C_GPIO_Port, TOF_LPn_C_Pin, GPIO_PIN_RESET);
       }
       if (_dev.platform.i2c_rst_pin >= 0) {
         // pinMode(_dev.platform.i2c_rst_pin, OUTPUT);  TODO
-        digitalWrite(_dev.platform.i2c_rst_pin, LOW);
-        HAL_GPIO_TogglePin()
+        //digitalWrite(_dev.platform.i2c_rst_pin, LOW);
+        HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
       }
       return 0;
     }
@@ -114,9 +114,11 @@ class VL53L5CX {
     virtual void vl53l5cx_on(void)
     {
       if (_dev.platform.lpn_pin >= 0) {
-        digitalWrite(_dev.platform.lpn_pin, HIGH);
+        // digitalWrite(_dev.platform.lpn_pin, HIGH);
+        HAL_GPIO_WritePin(TOF_LPn_C_GPIO_Port, TOF_LPn_C_Pin, GPIO_PIN_SET);
       }
-      delay(10);
+      // delay(10);
+      HAL_Delay(10);
     }
 
     /**
@@ -126,9 +128,11 @@ class VL53L5CX {
     virtual void vl53l5cx_off(void)
     {
       if (_dev.platform.lpn_pin >= 0) {
-        digitalWrite(_dev.platform.lpn_pin, LOW);
+        // digitalWrite(_dev.platform.lpn_pin, LOW);
+        HAL_GPIO_WritePin(TOF_LPn_C_GPIO_Port, TOF_LPn_C_Pin, GPIO_PIN_RESET);
       }
-      delay(10);
+      // delay(10);
+      HAL_Delay(10);
     }
 
     /**
@@ -138,12 +142,18 @@ class VL53L5CX {
     virtual void vl53l5cx_i2c_reset(void)
     {
       if (_dev.platform.i2c_rst_pin >= 0) {
-        digitalWrite(_dev.platform.i2c_rst_pin, LOW);
-        delay(10);
-        digitalWrite(_dev.platform.i2c_rst_pin, HIGH);
-        delay(10);
-        digitalWrite(_dev.platform.i2c_rst_pin, LOW);
-        delay(10);
+        // digitalWrite(_dev.platform.i2c_rst_pin, LOW);
+        // delay(10);
+        // digitalWrite(_dev.platform.i2c_rst_pin, HIGH);
+        // delay(10);
+        // digitalWrite(_dev.platform.i2c_rst_pin, LOW);
+        // delay(10);
+        HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
+        HAL_Delay(10);
+        HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_SET);
+        HAL_Delay(10);
+        HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
+        HAL_Delay(10);
       }
     }
 

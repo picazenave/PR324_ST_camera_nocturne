@@ -170,7 +170,7 @@ uint8_t VL53L5CX::WaitMs(
   uint32_t TimeMs)
 {
   (void)p_platform;
-  delay(TimeMs);
+  HAL_Delay(TimeMs);
 
   return 0;
 }
