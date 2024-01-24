@@ -113,6 +113,8 @@ void Error_Handler(void);
 #define TOF_LPn_C_GPIO_Port GPIOB
 #define SD_CS_Pin GPIO_PIN_5
 #define SD_CS_GPIO_Port GPIOB
+#define CAMERA_CS_Pin GPIO_PIN_6
+#define CAMERA_CS_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
