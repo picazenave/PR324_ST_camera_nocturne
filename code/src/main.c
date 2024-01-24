@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -87,6 +88,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -101,7 +103,7 @@ int main(void)
   {
     // HAL_Delay(300);
     if (tick_count % 50 == 0)
-      HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+      ;//TODO
 
     uart_in=0;
     HAL_StatusTypeDef r_uart_rx = HAL_UART_Receive(&huart2, &uart_in, 1, 1);
