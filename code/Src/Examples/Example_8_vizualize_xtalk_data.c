@@ -175,18 +175,18 @@ int example8(void)
 	{
 		bh_ptr = (union Block_header *)&(xtalk_data[i]);
 		if (bh_ptr->idx == 0xA128){
-			printf("Xtalk shape bins located at position %#06x\n", i);
+			printf("Xtalk shape bins located at position %#06lx\n", i);
 			for (j = 0; j < 144; j++){
 				memcpy(&(xtalk_shape_bins[j]), &(xtalk_data[i + 4 + j * 2]), 2);
-				printf("xtalk_shape_bins[%d] = %u\n", j, xtalk_shape_bins[j]);
+				printf("xtalk_shape_bins[%ld] = %u\n", j, xtalk_shape_bins[j]);
 			}
 		}
 		if (bh_ptr->idx == 0x9FFC){
-			printf("Xtalk signal kcps located at position %#06x\n", i);
+			printf("Xtalk signal kcps located at position %#06lx\n", i);
 			for (j = 0; j < VL53L5CX_RESOLUTION_8X8; j++){
 				memcpy(&(xtalk_signal_kcps_grid[j]), &(xtalk_data[i + 4 + j * 4]), 4);
 				xtalk_signal_kcps_grid[j] /= 2048;
-				printf("xtalk_signal_kcps_grid[%d] = %d\n", j, xtalk_signal_kcps_grid[j]);
+				printf("xtalk_signal_kcps_grid[%ld] = %ld\n", j, xtalk_signal_kcps_grid[j]);
 			}
 		}
 	}
@@ -220,7 +220,7 @@ int example8(void)
 			printf("Print data no : %3u\n", Dev.streamcount);
 			for(i = 0; i < 16; i++)
 			{
-				printf("Zone : %3d, Status : %3u, Distance : %4d mm\n",
+				printf("Zone : %3ld, Status : %3u, Distance : %4d mm\n",
 					i,
 					Results.target_status[VL53L5CX_NB_TARGET_PER_ZONE*i],
 					Results.distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*i]);
