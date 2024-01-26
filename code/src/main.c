@@ -100,20 +100,34 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  uint8_t tof_matrix[8 * 8] = {0};
-  uint32_t tick_count = 0;
-  uint8_t uart_in = 0;
+  uint8_t slaveAddress = 0x52;
+
+  HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(TOF_PWR_EN_GPIO_Port, TOF_PWR_EN_Pin, GPIO_PIN_SET);
+
   while (1)
   {
-    // HAL_Delay(300);
-    if (tick_count % 50 == 0)
-      HAL_UART_Transmit(&huart2, "alive\r\n", 7, 100);
+    uint8_t sendData[] = {0x01, 0x02, 0x03, 0x04};
+    HAL_StatusTypeDef i2cStatus;
 
-    tick_count++;
+    i2cStatus = HAL_I2C_Master_Transmit(&hi2c1, slaveAddress << 1, sendData, sizeof(sendData), HAL_MAX_DELAY);
+
+    // Afficher le statut sur l'UART
+    char uartMsg[50];
+    snprintf(uartMsg, sizeof(uartMsg), "I2C Status: %d\r\n", i2cStatus);
+    HAL_UART_Transmit(&huart2, (uint8_t *)uartMsg, strlen(uartMsg), HAL_MAX_DELAY);
+
+    HAL_Delay(1000);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
+  
+  
+  
+  
   /* USER CODE END 3 */
 }
 
