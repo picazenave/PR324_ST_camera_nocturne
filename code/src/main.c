@@ -23,8 +23,11 @@
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
-#include <stdio.h>
+
+#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include "vl53l5cx_api.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -102,7 +105,11 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  uint8_t slaveAddress = 0x52;
+  uint8_t 				status, loop, isAlive, isReady, i;
+	VL53L5CX_Configuration 	Dev;			/* Sensor configuration */
+	VL53L5CX_ResultsData 	Results;		/* Results data from VL53L5CX */
+
+  Dev.platform.address = VL53L5CX_DEFAULT_I2C_ADDRESS << 1;
 
   // HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
   // HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_SET);
@@ -110,17 +117,33 @@ int main(void)
 
   while (1)
   {
-    uint8_t sendData[] = {0x01, 0x02, 0x03, 0x04};
-    HAL_StatusTypeDef i2cStatus;
 
-    i2cStatus = HAL_I2C_Master_Transmit(&hi2c1, slaveAddress << 1, sendData, sizeof(sendData), HAL_MAX_DELAY);
+    char * string1 = "tx buffer\r\n";
+    HAL_UART_Transmit(&huart2, string1, strlen(string1), 1000);
 
-    // Afficher le statut sur l'UART
-    char uartMsg[50];
-    snprintf(uartMsg, sizeof(uartMsg), "I2C Status: %d\r\n", i2cStatus);
-    HAL_UART_Transmit(&huart2, (uint8_t *)uartMsg, strlen(uartMsg), HAL_MAX_DELAY);
+    status = vl53l5cx_is_alive(&Dev, &isAlive);
+    if(!isAlive || status)
+    {
+      char *text = "VL53L5CX not detected at requested address\n";
+      HAL_UART_Transmit(&huart2, text, strlen(text), 100);
+    }
 
-    HAL_Delay(1000);
+    /* (Mandatory) Init VL53L5CX sensor */
+    status = vl53l5cx_init(&Dev);
+    if(status)
+    {
+      char *text = "VL53L5CX ULD Loading failed\n";
+      HAL_UART_Transmit(&huart2, text, strlen(text), 100);
+    }
+    else
+    {
+      char *text = "VL53L5CX ULD ready ! Version :\n";
+      HAL_UART_Transmit(&huart2, text, strlen(text), 100);
+      HAL_UART_Transmit(&huart2, VL53L5CX_API_REVISION, strlen(VL53L5CX_API_REVISION), 100);
+    }
+    
+    
+
 
     /* USER CODE END WHILE */
 
