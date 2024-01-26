@@ -26,7 +26,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "ov5640_regs.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +37,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define cam_address (uint8_t)(0x3C << 1)
+#define OV5640_CHIPID_HIGH 0x300a
+#define OV5640_CHIPID_LOW 0x300b
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -55,10 +58,55 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
-
+#include "stm32f4xx_hal_i2c.h"
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+HAL_StatusTypeDef I2C_RX_16reg_8data(uint16_t regID, uint8_t *regDat)
+{
+  uint8_t temp[2] = {regID >> 8, regID & 0x00FF};
+  uint8_t rxdata = 0;
+  // HAL_I2C_Master_Transmit(&hi2c1, cam_address, temp, 2, 500);
+  // HAL_I2C_Master_Receive(&hi2c1, cam_address, &rxdata, 1, 500);
+
+  HAL_StatusTypeDef ret;
+  ret = HAL_I2C_Master_Transmit(&hi2c1, cam_address, &temp[0], 1, 100);
+  if (ret == HAL_OK)
+    ret = HAL_I2C_Master_Transmit(&hi2c1, cam_address, &temp[1], 1, 100);
+  if (ret == HAL_OK)
+    ret = HAL_I2C_Master_Receive(&hi2c1, cam_address, &rxdata, 1, 100);
+
+  // HAL_I2C_Mem_Read(&hi2c1, cam_address, (uint16_t)regID, I2C_MEMADD_SIZE_16BIT, &rxdata, 1, 500);
+
+  char buffer[64];
+  int size = snprintf(buffer, 64, "I2C RXdata=0x%X || reg=0x%X || ret=%X\r\n", rxdata, regID, ret);
+  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100);
+  return ret;
+}
+
+HAL_StatusTypeDef I2C_TX_16reg_8data(uint16_t regID, uint8_t regDat)
+{
+  uint8_t temp[3] = {regID >> 8, regID & 0x00FF, regDat & 0x00FF};
+  return HAL_I2C_Master_Transmit(&hi2c1, cam_address, temp, 3, 100);
+}
+
+HAL_StatusTypeDef I2C_TX_multiple_16reg_8data(const struct sensor_reg reglist[])
+{
+  int err = 0;
+  const struct sensor_reg *next = reglist;
+  uint16_t reg_addr = next->reg;
+  uint8_t reg_val = next->val;
+
+  while ((reg_addr != 0xffff) | (reg_val != 0xff))
+  {
+
+    reg_addr = next->reg;
+    reg_val = next->val;
+    err = I2C_TX_16reg_8data(reg_addr, reg_val);
+    next++;
+  }
+  return err;
+}
 /* USER CODE END 0 */
 
 /**
@@ -122,50 +170,44 @@ int main(void)
     }
   }
   HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", 2, 100);
-/*
- * Camera init
- */
-#define OV5640_CHIPID_HIGH 0x300a
-#define OV5640_CHIPID_LOW 0x300b
-  HAL_GPIO_WritePin(CAMERA_SHUTTER_GPIO_Port, CAMERA_SHUTTER_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(CAM_PWDN_GPIO_Port, CAM_PWDN_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(CAM_RST_GPIO_Port, CAM_RST_Pin, GPIO_PIN_RESET);
-  HAL_Delay(300);
-  HAL_GPIO_WritePin(CAMERA_SHUTTER_GPIO_Port, CAMERA_SHUTTER_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(CAM_PWDN_GPIO_Port, CAM_PWDN_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(CAM_RST_GPIO_Port, CAM_RST_Pin, GPIO_PIN_SET);
-  // ArduCAM myCAM(OV5640,CAM1_CS);
-  HAL_Delay(300); // wait for camera startup TODO remove
-  while (1)
-  {
-    // Check if the camera module type is OV5640
-    uint8_t vid, pid;
-    // myCAM.rdSensorReg16_8(OV5640_CHIPID_HIGH, &vid);
-    uint8_t i2c_tx_data[2] = {OV5640_CHIPID_HIGH >> 8, OV5640_CHIPID_HIGH & 0x00FF};
-    HAL_I2C_Master_Transmit(&hi2c1, 0x42, i2c_tx_data, 2, 100);
-    HAL_I2C_Master_Receive(&hi2c1, 0x42, &vid, 1, 100);
+  /*
+   * Camera init
+   */
+  // HAL_GPIO_WritePin(CAMERA_SHUTTER_GPIO_Port, CAMERA_SHUTTER_Pin, GPIO_PIN_RESET);
+  // HAL_GPIO_WritePin(CAM_PWDN_GPIO_Port, CAM_PWDN_Pin, GPIO_PIN_SET);
+  // HAL_Delay(300);
+  // HAL_GPIO_WritePin(CAMERA_SHUTTER_GPIO_Port, CAMERA_SHUTTER_Pin, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(CAM_PWDN_GPIO_Port, CAM_PWDN_Pin, GPIO_PIN_RESET);
+  // HAL_Delay(300); // wait for camera startup TODO remove
 
-    // myCAM.rdSensorReg16_8(OV5640_CHIPID_LOW, &pid);
-    i2c_tx_data[0] = OV5640_CHIPID_LOW >> 8;
-    i2c_tx_data[1] = OV5640_CHIPID_LOW & 0x00FF;
-    HAL_I2C_Master_Transmit(&hi2c1, 0x42, i2c_tx_data, 2, 100);
-    HAL_I2C_Master_Receive(&hi2c1, 0x42, &pid, 1, 100);
-    if ((vid != 0x56) || (pid != 0x40))
-    {
-      HAL_UART_Transmit(&huart2, (uint8_t *)"Can't find OV5640 module!\r\n", 27, 100);
-      char buffer[32];
-      int size = snprintf(buffer, 32, "vid=%0X,pid=%0X\r\n", vid, pid);
-      HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100);
-      HAL_Delay(1000);
-      continue;
-    }
-    else
-    {
-      HAL_UART_Transmit(&huart2, (uint8_t *)"OV5640 detected.\r\n", 18, 100);
-      break;
-    }
-    HAL_Delay(1000);
-  }
+  // read FW_STATUS bits
+  hi2c1.Instance->CR2=0;
+  uint8_t rxdata = 0;
+  HAL_StatusTypeDef res = I2C_RX_16reg_8data(0x3029, &rxdata);
+  char buffer[32];
+  int size = snprintf(buffer, 32, "FW_STATUS=0x%X || res=%d\r\n", rxdata, res);
+  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100);
+
+  // download firmware
+  
+  // I2C_TX_16reg_8data((uint16_t)0x3103, (uint8_t)0x11);
+  // I2C_TX_16reg_8data((uint16_t)0x3008, (uint8_t)0x82);
+  // HAL_Delay(100);
+  // I2C_TX_multiple_16reg_8data(OV5640YUV_Sensor_Dvp_Init);
+  // HAL_Delay(500);
+  // I2C_TX_multiple_16reg_8data(OV5640_JPEG_QSXGA);
+  // I2C_TX_multiple_16reg_8data(OV5640_QSXGA2QVGA);
+  // I2C_TX_16reg_8data((uint16_t)0x4407, (uint8_t)0x0C);
+
+  // check FW_STATUS bits for FW OK
+  rxdata = 0;
+  res = I2C_RX_16reg_8data(0x3029, &rxdata);
+  size = snprintf(buffer, 32, "FW_STATUS=0x%X || res=%d\r\n", rxdata, res);
+  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100);
+
+  HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
+  while (1)
+    ;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -175,7 +217,7 @@ int main(void)
   while (1)
   {
     // HAL_Delay(300);
-    if (tick_count % 50 == 0)
+    if (tick_count % 10000 == 0)
       HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
 
     tick_count++;

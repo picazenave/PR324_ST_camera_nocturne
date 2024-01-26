@@ -1,12 +1,12 @@
 #ifndef OV5640_REGS_H
 #define OV5640_REGS_H
-#include "ArduCAM.h"
+//#include "ArduCAM.h"
 //#include <avr/pgmspace.h>
 
 #define OV5640_CHIPID_HIGH 0x300a
 #define OV5640_CHIPID_LOW 0x300b
 
-const struct sensor_reg OV5640_Auto_Focus[] PROGMEM=
+const struct sensor_reg OV5640_Auto_Focus[] =
 {
 {0x3000,0x20},
 {0x8000,0x02},
@@ -4109,7 +4109,7 @@ const struct sensor_reg OV5640_Auto_Focus[] PROGMEM=
 
 
 
-const struct sensor_reg OV5640YUV_Sensor_Dvp_Init[] PROGMEM=
+const struct sensor_reg OV5640YUV_Sensor_Dvp_Init[] =
 {
 		{ 0x4740, 0x20 },
 
@@ -4413,7 +4413,7 @@ const struct sensor_reg OV5640YUV_Sensor_Dvp_Init[] PROGMEM=
 
 
 
-const struct sensor_reg ov5640_vga_preview[] PROGMEM=
+const struct sensor_reg ov5640_vga_preview[] =
 {
 		// YUV VGA 30fps, night mode 5fps
 		// Input Clock = 24Mhz, PCLK = 56MHz
@@ -4470,7 +4470,7 @@ const struct sensor_reg ov5640_vga_preview[] PROGMEM=
 
 };
 
-const struct sensor_reg OV5640_RGB_QVGA[] PROGMEM =
+const struct sensor_reg OV5640_RGB_QVGA[]  =
 {
 		{0x3008, 0x02},
 		{0x3035, 0x41},
@@ -4485,7 +4485,7 @@ const struct sensor_reg OV5640_RGB_QVGA[] PROGMEM =
 };
 
 //2592x1944 QSXGA
-const struct sensor_reg OV5640_JPEG_QSXGA[] PROGMEM =
+const struct sensor_reg OV5640_JPEG_QSXGA[]  =
 {
 		{0x3820 ,0x40},
 		{0x3821 ,0x26},
@@ -4526,7 +4526,7 @@ const struct sensor_reg OV5640_JPEG_QSXGA[] PROGMEM =
 };
 
 //5MP
-const struct sensor_reg OV5640_5MP_JPEG[] PROGMEM =
+const struct sensor_reg OV5640_5MP_JPEG[]  =
 {
 		{0x3800 ,0x00},
 		{0x3801 ,0x00},
@@ -4557,7 +4557,7 @@ const struct sensor_reg OV5640_5MP_JPEG[] PROGMEM =
 };
 
 //320x240 QVGA
-const struct sensor_reg OV5640_QSXGA2QVGA[] PROGMEM =
+const struct sensor_reg OV5640_QSXGA2QVGA[]  =
 {
 		{0x3800 ,0x00},
 		{0x3801 ,0x00},
@@ -4588,7 +4588,7 @@ const struct sensor_reg OV5640_QSXGA2QVGA[] PROGMEM =
 };
 
 //640x480 VGA
-const struct sensor_reg OV5640_QSXGA2VGA[] PROGMEM =
+const struct sensor_reg OV5640_QSXGA2VGA[]  =
 {
 		{0x3800 ,0x00},
 		{0x3801 ,0x00},
@@ -4619,7 +4619,7 @@ const struct sensor_reg OV5640_QSXGA2VGA[] PROGMEM =
 };
 
 //800x480 WVGA
-const struct sensor_reg OV5640_QSXGA2WVGA[] PROGMEM =
+const struct sensor_reg OV5640_QSXGA2WVGA[]  =
 {
 		{0x3800 ,0x00},
 		{0x3801 ,0x00},
@@ -4654,7 +4654,7 @@ const struct sensor_reg OV5640_QSXGA2WVGA[] PROGMEM =
 };
 
 //352x288 CIF
-const struct sensor_reg OV5640_QSXGA2CIF[] PROGMEM =
+const struct sensor_reg OV5640_QSXGA2CIF[]  =
 {
 		{0x3800 ,0x00},
 		{0x3801 ,0x00},
@@ -4689,7 +4689,7 @@ const struct sensor_reg OV5640_QSXGA2CIF[] PROGMEM =
 };
 
 //1280x960 SXGA
-const struct sensor_reg OV5640_QSXGA2SXGA[] PROGMEM =
+const struct sensor_reg OV5640_QSXGA2SXGA[]  =
 {
 		{0x3800 ,0x00},
 		{0x3801 ,0x00},
@@ -4721,7 +4721,7 @@ const struct sensor_reg OV5640_QSXGA2SXGA[] PROGMEM =
 };
 
 //2048x1536 QXGA
-const struct sensor_reg OV5640_QSXGA2QXGA[] PROGMEM =
+const struct sensor_reg OV5640_QSXGA2QXGA[]  =
 {
 		{0x3800 ,0x00},
 		{0x3801 ,0x00},
@@ -4753,7 +4753,7 @@ const struct sensor_reg OV5640_QSXGA2QXGA[] PROGMEM =
 
 
 //1600x1200 UXGA
-const struct sensor_reg OV5640_QSXGA2UXGA[] PROGMEM =
+const struct sensor_reg OV5640_QSXGA2UXGA[]  =
 {
 		{0x3800 ,0x00},
 		{0x3801 ,0x00},
@@ -4784,7 +4784,7 @@ const struct sensor_reg OV5640_QSXGA2UXGA[] PROGMEM =
 };
 
 //1024x768 XGA
-const struct sensor_reg OV5640_QSXGA2XGA[] PROGMEM =
+const struct sensor_reg OV5640_QSXGA2XGA[]  =
 {
 		{0x3800 ,0x00},
 		{0x3801 ,0x00},

@@ -31,6 +31,15 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+/****************************************************************/
+/* define a structure for sensor register initialization values */
+/****************************************************************/
+struct sensor_reg {
+	uint16_t reg;
+	uint16_t val;
+};
+
+
 #include "stm32f4xx_hal_i2c.h"
 /* USER CODE END Includes */
 
@@ -93,8 +102,8 @@ void Error_Handler(void);
 #define D8_GPIO_Port GPIOC
 #define D9_Pin GPIO_PIN_9
 #define D9_GPIO_Port GPIOC
-#define CAM_RST_Pin GPIO_PIN_8
-#define CAM_RST_GPIO_Port GPIOA
+#define CAMERA_RST_Pin GPIO_PIN_8
+#define CAMERA_RST_GPIO_Port GPIOA
 #define XCLK_Pin GPIO_PIN_9
 #define XCLK_GPIO_Port GPIOA
 #define PCLK_Pin GPIO_PIN_10

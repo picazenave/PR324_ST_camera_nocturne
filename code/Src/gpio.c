@@ -55,7 +55,7 @@ void MX_GPIO_Init(void)
                           |SD_CS_Pin|CAMERA_CS_Pin|CAMERA_SHUTTER_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, CAM_RST_Pin|XCLK_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, CAMERA_RST_Pin|XCLK_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -95,11 +95,11 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIO_PIR_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = CAM_RST_Pin;
+  GPIO_InitStruct.Pin = CAMERA_RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(CAM_RST_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(CAMERA_RST_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = XCLK_Pin;
