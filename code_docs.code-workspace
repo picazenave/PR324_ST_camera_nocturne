@@ -11,7 +11,13 @@
 		"files.associations": {
 			"i2c.h": "c",
 			"stm32f4xx_hal.h": "c",
-			"stm32f4xx_hal_i2c.h": "c"
+			"stm32f4xx_hal_i2c.h": "c",
+			"i2cbitbang.h": "c",
+			"i2cbitbang_board.h": "c",
+			"my_i2cbitbang.h": "c",
+			"usart.h": "c",
+			"my_i2cbitbang_driver.h": "c",
+			"stm32f4xx.h": "c"
 		}
 	}
 }

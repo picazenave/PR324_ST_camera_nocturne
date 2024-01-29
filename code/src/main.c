@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "ov5640_regs.h"
+#include "my_i2cbitbang.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,55 +59,10 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
-#include "stm32f4xx_hal_i2c.h"
+
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-HAL_StatusTypeDef I2C_RX_16reg_8data(uint16_t regID, uint8_t *regDat)
-{
-  uint8_t temp[2] = {regID >> 8, regID & 0x00FF};
-  uint8_t rxdata = 0;
-  // HAL_I2C_Master_Transmit(&hi2c1, cam_address, temp, 2, 500);
-  // HAL_I2C_Master_Receive(&hi2c1, cam_address, &rxdata, 1, 500);
-
-  HAL_StatusTypeDef ret;
-  ret = HAL_I2C_Master_Transmit(&hi2c1, cam_address, &temp[0], 1, 100);
-  if (ret == HAL_OK)
-    ret = HAL_I2C_Master_Transmit(&hi2c1, cam_address, &temp[1], 1, 100);
-  if (ret == HAL_OK)
-    ret = HAL_I2C_Master_Receive(&hi2c1, cam_address, &rxdata, 1, 100);
-
-  // HAL_I2C_Mem_Read(&hi2c1, cam_address, (uint16_t)regID, I2C_MEMADD_SIZE_16BIT, &rxdata, 1, 500);
-
-  char buffer[64];
-  int size = snprintf(buffer, 64, "I2C RXdata=0x%X || reg=0x%X || ret=%X\r\n", rxdata, regID, ret);
-  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100);
-  return ret;
-}
-
-HAL_StatusTypeDef I2C_TX_16reg_8data(uint16_t regID, uint8_t regDat)
-{
-  uint8_t temp[3] = {regID >> 8, regID & 0x00FF, regDat & 0x00FF};
-  return HAL_I2C_Master_Transmit(&hi2c1, cam_address, temp, 3, 100);
-}
-
-HAL_StatusTypeDef I2C_TX_multiple_16reg_8data(const struct sensor_reg reglist[])
-{
-  int err = 0;
-  const struct sensor_reg *next = reglist;
-  uint16_t reg_addr = next->reg;
-  uint8_t reg_val = next->val;
-
-  while ((reg_addr != 0xffff) | (reg_val != 0xff))
-  {
-
-    reg_addr = next->reg;
-    reg_val = next->val;
-    err = I2C_TX_16reg_8data(reg_addr, reg_val);
-    next++;
-  }
-  return err;
-}
 /* USER CODE END 0 */
 
 /**
@@ -181,15 +137,17 @@ int main(void)
   // HAL_Delay(300); // wait for camera startup TODO remove
 
   // read FW_STATUS bits
-  hi2c1.Instance->CR2=0;
-  uint8_t rxdata = 0;
-  HAL_StatusTypeDef res = I2C_RX_16reg_8data(0x3029, &rxdata);
+  uint16_t regAddr = 0x3029;
+  uint8_t data[1] = {0};
+  uint8_t datalen = 1;
+  uint8_t timeout = 500;
+  HAL_I2C_Mem_Read(&hi2c1, cam_address, regAddr, 2, data, datalen, timeout);
   char buffer[32];
-  int size = snprintf(buffer, 32, "FW_STATUS=0x%X || res=%d\r\n", rxdata, res);
+  int size = snprintf(buffer, 32, "FW_STATUS=0x%X \r\n", data);
   HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100);
 
   // download firmware
-  
+
   // I2C_TX_16reg_8data((uint16_t)0x3103, (uint8_t)0x11);
   // I2C_TX_16reg_8data((uint16_t)0x3008, (uint8_t)0x82);
   // HAL_Delay(100);
@@ -200,10 +158,6 @@ int main(void)
   // I2C_TX_16reg_8data((uint16_t)0x4407, (uint8_t)0x0C);
 
   // check FW_STATUS bits for FW OK
-  rxdata = 0;
-  res = I2C_RX_16reg_8data(0x3029, &rxdata);
-  size = snprintf(buffer, 32, "FW_STATUS=0x%X || res=%d\r\n", rxdata, res);
-  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100);
 
   HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
   while (1)
