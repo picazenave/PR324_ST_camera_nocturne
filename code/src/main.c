@@ -110,16 +110,19 @@ int main(void)
 	VL53L5CX_ResultsData 	Results;		/* Results data from VL53L5CX */
 
   Dev.platform.address = VL53L5CX_DEFAULT_I2C_ADDRESS << 1;
+  
+  // HAL_GPIO_Init(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin);
+  // HAL_GPIO_Init(TOF_LPn_C_GPIO_Port, TOF_LPn_C_Pin);
+  // HAL_GPIO_Init(TOF_INT_GPIO_Port, TOF_INT_Pin);
 
-  // HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
-  // HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_SET);
+  // HAL_GPIO_Init(TOF_PWR_EN_GPIO_Port, TOF_PWR_EN_Pin);
   HAL_GPIO_WritePin(TOF_PWR_EN_GPIO_Port, TOF_PWR_EN_Pin, GPIO_PIN_SET);
+
 
   while (1)
   {
-
-    char * string1 = "tx buffer\r\n";
-    HAL_UART_Transmit(&huart2, string1, strlen(string1), 1000);
+    char *text = "Begin sequence\n";
+    HAL_UART_Transmit(&huart2, text, strlen(text), 100);
 
     status = vl53l5cx_is_alive(&Dev, &isAlive);
     if(!isAlive || status)
@@ -128,19 +131,19 @@ int main(void)
       HAL_UART_Transmit(&huart2, text, strlen(text), 100);
     }
 
-    /* (Mandatory) Init VL53L5CX sensor */
-    status = vl53l5cx_init(&Dev);
-    if(status)
-    {
-      char *text = "VL53L5CX ULD Loading failed\n";
-      HAL_UART_Transmit(&huart2, text, strlen(text), 100);
-    }
-    else
-    {
-      char *text = "VL53L5CX ULD ready ! Version :\n";
-      HAL_UART_Transmit(&huart2, text, strlen(text), 100);
-      HAL_UART_Transmit(&huart2, VL53L5CX_API_REVISION, strlen(VL53L5CX_API_REVISION), 100);
-    }
+    // /* (Mandatory) Init VL53L5CX sensor */
+    // status = vl53l5cx_init(&Dev);
+    // if(status)
+    // {
+    //   char *text = "VL53L5CX ULD Loading failed\n";
+    //   HAL_UART_Transmit(&huart2, text, strlen(text), 100);
+    // }
+    // else
+    // {
+    //   char *text = "VL53L5CX ULD ready ! Version :\n";
+    //   HAL_UART_Transmit(&huart2, text, strlen(text), 100);
+    //   HAL_UART_Transmit(&huart2, VL53L5CX_API_REVISION, strlen(VL53L5CX_API_REVISION), 100);
+    // }
     
     
 

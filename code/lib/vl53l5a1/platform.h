@@ -17,6 +17,23 @@
 
 #include <stdint.h>
 #include <string.h>
+#include "stm32f4xx_hal.h"
+//#include "platform_config.h"
+
+
+#ifndef DEFAULT_I2C_BUFFER_LEN
+  #ifdef ARDUINO_SAM_DUE
+    /* FIXME: It seems that an I2C buffer of BUFFER_LENGTH does not work on Arduino DUE. So, we need to decrease the size */
+    #define DEFAULT_I2C_BUFFER_LEN (BUFFER_LENGTH - 2)
+  #else
+    #ifdef BUFFER_LENGTH
+      #define DEFAULT_I2C_BUFFER_LEN BUFFER_LENGTH
+    #else
+      #define DEFAULT_I2C_BUFFER_LEN 32
+    #endif
+  #endif
+#endif
+
 
 /**
  * @brief Structure VL53L5CX_Platform needs to be filled by the customer,
@@ -32,6 +49,12 @@ typedef struct
 	 * needs to be added */
 	/* Example for most standard platform : I2C address of sensor */
     uint16_t  			address;
+
+	I2C_HandleTypeDef *dev_i2c;
+
+	int lpn_pin;
+
+	int i2c_rst_pin;
 
 } VL53L5CX_Platform;
 
@@ -79,7 +102,7 @@ typedef struct
 
 uint8_t RdByte(
 		VL53L5CX_Platform *p_platform,
-		uint16_t RegisterAdress,
+		uint16_t RegisterAddress,
 		uint8_t *p_value);
 
 /**
@@ -93,7 +116,7 @@ uint8_t RdByte(
 
 uint8_t WrByte(
 		VL53L5CX_Platform *p_platform,
-		uint16_t RegisterAdress,
+		uint16_t RegisterAddress,
 		uint8_t value);
 
 /**
@@ -108,7 +131,7 @@ uint8_t WrByte(
 
 uint8_t RdMulti(
 		VL53L5CX_Platform *p_platform,
-		uint16_t RegisterAdress,
+		uint16_t RegisterAddress,
 		uint8_t *p_values,
 		uint32_t size);
 
@@ -124,7 +147,7 @@ uint8_t RdMulti(
 
 uint8_t WrMulti(
 		VL53L5CX_Platform *p_platform,
-		uint16_t RegisterAdress,
+		uint16_t RegisterAddress,
 		uint8_t *p_values,
 		uint32_t size);
 
