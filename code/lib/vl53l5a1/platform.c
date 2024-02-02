@@ -1,102 +1,134 @@
-/**
-  *
-  * Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-
+/*******************************************************************************
+* Copyright (c) 2020, STMicroelectronics - All Rights Reserved
+*
+* This file is part of the VL53L5CX Ultra Lite Driver and is dual licensed,
+* either 'STMicroelectronics Proprietary license'
+* or 'BSD 3-clause "New" or "Revised" License' , at your option.
+*
+********************************************************************************
+*
+* 'STMicroelectronics Proprietary license'
+*
+********************************************************************************
+*
+* License terms: STMicroelectronics Proprietary in accordance with licensing
+* terms at www.st.com/sla0081
+*
+* STMicroelectronics confidential
+* Reproduction and Communication of this document is strictly prohibited unless
+* specifically authorized in writing by STMicroelectronics.
+*
+*
+********************************************************************************
+*
+* Alternatively, the VL53L5CX Ultra Lite Driver may be distributed under the
+* terms of 'BSD 3-clause "New" or "Revised" License', in which case the
+* following provisions apply instead of the ones mentioned above :
+*
+********************************************************************************
+*
+* License terms: BSD 3-clause "New" or "Revised" License.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+* 1. Redistributions of source code must retain the above copyright notice, this
+* list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright notice,
+* this list of conditions and the following disclaimer in the documentation
+* and/or other materials provided with the distribution.
+*
+* 3. Neither the name of the copyright holder nor the names of its contributors
+* may be used to endorse or promote products derived from this software
+* without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+* AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+* DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+* OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+* OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*
+*
+*******************************************************************************/
 
 #include "platform.h"
 
+extern I2C_HandleTypeDef 	hi2c1;
 
 uint8_t RdByte(
 		VL53L5CX_Platform *p_platform,
-		uint16_t RegisterAddress,
+		uint16_t RegisterAdress,
 		uint8_t *p_value)
 {
-	// uint8_t status = 255;
-	
-	/* Need to be implemented by customer. This function returns 0 if OK */
+	uint8_t status = 0;
+	uint8_t data_write[2];
+	uint8_t data_read[1];
 
-	uint8_t status = RdMulti(p_platform, RegisterAddress, p_value, 1);
-  	return status;
+	data_write[0] = (RegisterAdress >> 8) & 0xFF;
+	data_write[1] = RegisterAdress & 0xFF;
+	status = HAL_I2C_Master_Transmit(&hi2c1, p_platform->address, data_write, 2, 100);
+	status = HAL_I2C_Master_Receive(&hi2c1, p_platform->address, data_read, 1, 100);
+	*p_value = data_read[0];
+  
+	return status;
 }
 
 uint8_t WrByte(
 		VL53L5CX_Platform *p_platform,
-		uint16_t RegisterAddress,
+		uint16_t RegisterAdress,
 		uint8_t value)
 {
-	// uint8_t status = 255;
+	uint8_t data_write[3];
+	uint8_t status = 0;
 
-	/* Need to be implemented by customer. This function returns 0 if OK */
-	
-	uint8_t status = WrMulti(p_platform, RegisterAddress, &value, 1);
+	data_write[0] = (RegisterAdress >> 8) & 0xFF;
+	data_write[1] = RegisterAdress & 0xFF;
+	data_write[2] = value & 0xFF;
+	status = HAL_I2C_Master_Transmit(&hi2c1,p_platform->address, data_write, 3, 100);
+
 	return status;
 }
 
-
 uint8_t WrMulti(
-  VL53L5CX_Platform *p_platform,
-  uint16_t RegisterAddress,
-  uint8_t *p_values,
-  uint32_t size)
+		VL53L5CX_Platform *p_platform,
+		uint16_t RegisterAdress,
+		uint8_t *p_values,
+		uint32_t size)
 {
-  uint32_t i = 0;
-  uint8_t buffer[2];
-
-  while (i < size) {
-    size_t current_write_size = (size - i > DEFAULT_I2C_BUFFER_LEN ? DEFAULT_I2C_BUFFER_LEN : size - i);
-
-    buffer[0] = (uint8_t)((RegisterAddress + i) >> 8);
-    buffer[1] = (uint8_t)((RegisterAddress + i) & 0xFF);
-
-    if (HAL_I2C_Mem_Write(p_platform->dev_i2c, p_platform->address, buffer[0], I2C_MEMADD_SIZE_16BIT, p_values + i, current_write_size, HAL_MAX_DELAY) != HAL_OK) {
-      return 1;
-    }
-
-    i += current_write_size;
-  }
-
-  return 0;
+	uint8_t status = HAL_I2C_Mem_Write(&hi2c1, p_platform->address, RegisterAdress,
+									I2C_MEMADD_SIZE_16BIT, p_values, size, 65535);
+	return status;
 }
 
 uint8_t RdMulti(
-  VL53L5CX_Platform *p_platform,
-  uint16_t RegisterAddress,
-  uint8_t *p_values,
-  uint32_t size)
+		VL53L5CX_Platform *p_platform,
+		uint16_t RegisterAdress,
+		uint8_t *p_values,
+		uint32_t size)
 {
-  int status = 0;
-  uint8_t buffer[2];
+	uint8_t status;
+	uint8_t data_write[2];
+	data_write[0] = (RegisterAdress>>8) & 0xFF;
+	data_write[1] = RegisterAdress & 0xFF;
+	status = HAL_I2C_Master_Transmit(&hi2c1, p_platform->address, data_write, 2, 100);
+	status += HAL_I2C_Master_Receive(&hi2c1, p_platform->address, p_values, size, 100);
 
-  do {
-    buffer[0] = (uint8_t)(RegisterAddress >> 8);
-    buffer[1] = (uint8_t)(RegisterAddress & 0xFF);
-
-    if (HAL_I2C_Mem_Read(p_platform->dev_i2c, p_platform->address, buffer[0], I2C_MEMADD_SIZE_16BIT, p_values, size, HAL_MAX_DELAY) != HAL_OK) {
-      status = 1;
-    } else {
-      status = 0;
-    }
-
-  } while (status != 0);
-
-  return status;
+	return status;
 }
 
-uint8_t Reset_Sensor(
-		VL53L5CX_Platform *p_platform)
+uint8_t Reset_Sensor(VL53L5CX_Platform *p_platform)
 {
-	uint8_t status = 0;
-	
 	/* (Optional) Need to be implemented by customer. This function returns 0 if OK */
-	
+
 	/* Set pin LPN to LOW */
 	/* Set pin AVDD to LOW */
 	/* Set pin VDDIO  to LOW */
@@ -106,8 +138,8 @@ uint8_t Reset_Sensor(
 	/* Set pin AVDD of to HIGH */
 	/* Set pin VDDIO of  to HIGH */
 	WaitMs(p_platform, 100);
-
-	return status;
+  
+	return 0;
 }
 
 void SwapBuffer(
@@ -115,97 +147,24 @@ void SwapBuffer(
 		uint16_t 	 	 size)
 {
 	uint32_t i, tmp;
-	
+
 	/* Example of possible implementation using <string.h> */
-	for(i = 0; i < size; i = i + 4) 
+	for(i = 0; i < size; i = i + 4)
 	{
 		tmp = (
 		  buffer[i]<<24)
 		|(buffer[i+1]<<16)
 		|(buffer[i+2]<<8)
 		|(buffer[i+3]);
-		
+
 		memcpy(&(buffer[i]), &tmp, 4);
 	}
-}	
+}
 
 uint8_t WaitMs(
 		VL53L5CX_Platform *p_platform,
-		uint32_t TimeMs)
+               uint32_t TimeMs)
 {
-	uint8_t status = 255;
-
-	/* Need to be implemented by customer. This function returns 0 if OK */
-	(void)p_platform;
 	HAL_Delay(TimeMs);
-	
-	return status;
+	return 0;
 }
-
-
-
-
-
-
-
-// uint8_t WrMulti(
-// 		VL53L5CX_Platform *p_platform,
-// 		uint16_t RegisterAddress,
-// 		uint8_t *p_values,
-// 		uint32_t size)
-// {
-// 	uint8_t status = 255;
-	
-// 	/* Need to be implemented by customer. This function returns 0 if OK */
-// 	uint32_t i = 0;
-// 	uint8_t buffer[2];
-
-// 	while (i < size) {
-// 	// If still more than DEFAULT_I2C_BUFFER_LEN bytes to go, DEFAULT_I2C_BUFFER_LEN,
-// 	// else the remaining number of bytes
-// 	size_t current_write_size = (size - i > DEFAULT_I2C_BUFFER_LEN ? DEFAULT_I2C_BUFFER_LEN : size - i);
-
-// 	buffer[0] = (uint8_t)((RegisterAddress + i) >> 8);
-//     buffer[1] = (uint8_t)((RegisterAddress + i) & 0xFF);
-
-// 	status = (uint8_t)HAL_I2C_Master_Transmit(p_platform->dev_i2c, p_platform->address, buffer, current_write_size, I2C_TIMEOUT_BUSY_FLAG);
-
-// 	if (status == HAL_ERROR)
-// 		return status;
-// 	else
-// 	{
-// 		i += current_write_size;
-// 	}
-	
-//   }
-
-// 	return 0;
-// }
-
-
-// uint8_t RdMulti(
-// 		VL53L5CX_Platform *p_platform,
-// 		uint16_t RegisterAddress,
-// 		uint8_t *p_values,
-// 		uint32_t size)
-// {
-// 	uint8_t status = 255;
-	
-// 	/* Need to be implemented by customer. This function returns 0 if OK */
-	
-// 	uint8_t buffer[2];
-
-// 	buffer[0] = (uint8_t)(RegisterAddress >> 8);
-// 	buffer[1] = (uint8_t)(RegisterAddress & 0xFF);
-
-// 	if (HAL_I2C_Master_Transmit(p_platform->dev_i2c, (uint16_t)(p_platform->address << 1), buffer, 2, HAL_MAX_DELAY) != HAL_OK) {
-// 		return 1;
-// 	}
-
-// 	if (HAL_I2C_Master_Receive(p_platform->dev_i2c, (uint16_t)(p_platform->address << 1), p_values, size, HAL_MAX_DELAY) != HAL_OK) {
-// 		return 1;
-// 	}
-
-// 	return 0;
-// }
-
