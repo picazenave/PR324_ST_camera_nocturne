@@ -17,7 +17,10 @@
 			"my_i2cbitbang.h": "c",
 			"usart.h": "c",
 			"my_i2cbitbang_driver.h": "c",
-			"stm32f4xx.h": "c"
+			"stm32f4xx.h": "c",
+			"tm_stm32f4_fatfs.h": "c",
+			"tm_stm32f4_delay.h": "c",
+			"main.h": "c"
 		}
 	}
 }

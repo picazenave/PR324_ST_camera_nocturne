@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "fatfs.h"
 #include "i2c.h"
 #include "spi.h"
 #include "usart.h"
@@ -27,8 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
-#include "ov5640_regs.h"
-#include "my_i2cbitbang.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,9 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define cam_address (uint8_t)(0x3C << 1)
-#define OV5640_CHIPID_HIGH 0x300a
-#define OV5640_CHIPID_LOW 0x300b
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -97,6 +95,7 @@ int main(void)
   MX_ADC1_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
   /**
    * I2C scanner
@@ -129,39 +128,104 @@ int main(void)
   /*
    * Camera init
    */
-  // HAL_GPIO_WritePin(CAMERA_SHUTTER_GPIO_Port, CAMERA_SHUTTER_Pin, GPIO_PIN_RESET);
-  // HAL_GPIO_WritePin(CAM_PWDN_GPIO_Port, CAM_PWDN_Pin, GPIO_PIN_SET);
-  // HAL_Delay(300);
-  // HAL_GPIO_WritePin(CAMERA_SHUTTER_GPIO_Port, CAMERA_SHUTTER_Pin, GPIO_PIN_SET);
-  // HAL_GPIO_WritePin(CAM_PWDN_GPIO_Port, CAM_PWDN_Pin, GPIO_PIN_RESET);
-  // HAL_Delay(300); // wait for camera startup TODO remove
+  /**
+   * SD test
+   */
+  printf("\r\n~ SD card demo by kiwih ~\r\n\r\n");
 
-  // read FW_STATUS bits
-  uint16_t regAddr = 0x3029;
-  uint8_t data[1] = {0};
-  uint8_t datalen = 1;
-  uint8_t timeout = 255;
-  HAL_I2C_Mem_Read(&hi2c1, cam_address, regAddr, 2, data, datalen, timeout);
-  char buffer[32];
-  int size = snprintf(buffer, 32, "FW_STATUS=0x%X \r\n", (0x00FF & (uint32_t)data));
-  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100);
+  HAL_Delay(1000); // a short delay is important to let the SD card settle
 
-  // download firmware
+  // some variables for FatFs
+  FATFS FatFs;  // Fatfs handle
+  FIL fil;      // File handle
+  FRESULT fres; // Result after operations
 
-  // I2C_TX_16reg_8data((uint16_t)0x3103, (uint8_t)0x11);
-  // I2C_TX_16reg_8data((uint16_t)0x3008, (uint8_t)0x82);
-  // HAL_Delay(100);
-  // I2C_TX_multiple_16reg_8data(OV5640YUV_Sensor_Dvp_Init);
-  // HAL_Delay(500);
-  // I2C_TX_multiple_16reg_8data(OV5640_JPEG_QSXGA);
-  // I2C_TX_multiple_16reg_8data(OV5640_QSXGA2QVGA);
-  // I2C_TX_16reg_8data((uint16_t)0x4407, (uint8_t)0x0C);
+  // Open the file system
+  fres = f_mount(&FatFs, "", 1); // 1=mount now
+  if (fres != FR_OK)
+  {
+    printf("f_mount error (%i)\r\n", fres);
+    while (1)
+      ;
+  }
 
-  // check FW_STATUS bits for FW OK
+  // Let's get some statistics from the SD card
+  DWORD free_clusters, free_sectors, total_sectors;
 
-  HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
-  while (1)
-    ;
+  FATFS *getFreeFs;
+
+  fres = f_getfree("", &free_clusters, &getFreeFs);
+  if (fres != FR_OK)
+  {
+    printf("f_getfree error (%i)\r\n", fres);
+    while (1)
+      ;
+  }
+
+  // Formula comes from ChaN's documentation
+  total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
+  free_sectors = free_clusters * getFreeFs->csize;
+
+  printf("SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n", total_sectors / 2, free_sectors / 2);
+
+  // Now let's try to open file "test.txt"
+  fres = f_open(&fil, "test.txt", FA_READ);
+  if (fres != FR_OK)
+  {
+    printf("f_open error (%i)\r\n",fres);
+    while (1)
+      ;
+  }
+  printf("I was able to open 'test.txt' for reading!\r\n");
+
+  // Read 30 bytes from "test.txt" on the SD card
+  BYTE readBuf[30];
+
+  // We can either use f_read OR f_gets to get data out of files
+  // f_gets is a wrapper on f_read that does some string formatting for us
+  TCHAR *rres = f_gets((TCHAR *)readBuf, 30, &fil);
+  if (rres != 0)
+  {
+    printf("Read string from 'test.txt' contents: %s\r\n", readBuf);
+  }
+  else
+  {
+    printf("f_gets error (%i)\r\n", fres);
+  }
+
+  // Be a tidy kiwi - don't forget to close your file!
+  f_close(&fil);
+
+  // Now let's try and write a file "write.txt"
+  fres = f_open(&fil, "write.txt", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+  if (fres == FR_OK)
+  {
+    printf("I was able to open 'write.txt' for writing\r\n");
+  }
+  else
+  {
+    printf("f_open error (%i)\r\n", fres);
+  }
+
+  // Copy in a string
+  strncpy((char *)readBuf, "a new file is made!", 19);
+  UINT bytesWrote;
+  fres = f_write(&fil, readBuf, 19, &bytesWrote);
+  if (fres == FR_OK)
+  {
+    printf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
+  }
+  else
+  {
+    printf("f_write error (%i)\r\n",fres);
+  }
+
+  // Be a tidy kiwi - don't forget to close your file!
+  f_close(&fil);
+
+  // We're done, so de-mount the drive
+  f_mount(NULL, "", 0);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
