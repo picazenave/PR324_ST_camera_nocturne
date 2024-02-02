@@ -19,6 +19,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "i2c.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 #include "stdio.h"
@@ -133,6 +135,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
+  MX_I2C1_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -201,22 +205,8 @@ int main(void)
 
     // HAL_Delay(300);
     if (tick_count % 50 == 0)
-      ;//TODO
+      HAL_UART_Transmit(&huart2, "alive\r\n", 7, 100);
 
-    uart_in=0;
-    HAL_StatusTypeDef r_uart_rx = HAL_UART_Receive(&huart2, &uart_in, 1, 1);
-    if (uart_in == 0x55 && r_uart_rx == HAL_OK)
-    {
-
-      for (uint8_t i = 0; i < 8; i++)
-      {
-        for (uint8_t j = 0; j < 8; j++)
-        {
-          tof_matrix[i + j * 8] += j + i + 1;
-        }
-      }
-      HAL_UART_Transmit(&huart2, tof_matrix, sizeof(tof_matrix), 1000);
-    }
     tick_count++;
     /* USER CODE END WHILE */
  
