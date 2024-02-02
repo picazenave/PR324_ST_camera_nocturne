@@ -140,10 +140,10 @@ int main(void)
   uint16_t regAddr = 0x3029;
   uint8_t data[1] = {0};
   uint8_t datalen = 1;
-  uint8_t timeout = 500;
+  uint8_t timeout = 255;
   HAL_I2C_Mem_Read(&hi2c1, cam_address, regAddr, 2, data, datalen, timeout);
   char buffer[32];
-  int size = snprintf(buffer, 32, "FW_STATUS=0x%X \r\n", data);
+  int size = snprintf(buffer, 32, "FW_STATUS=0x%X \r\n", (0x00FF & (uint32_t)data));
   HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100);
 
   // download firmware
