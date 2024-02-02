@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 window_name='Serial ESPCAM'
 
-ser = serial.Serial('COM9', 500000,timeout=0.8)
+ser = serial.Serial('COM9', 2000000,timeout=0.8)
 print(ser.name)
 ser.reset_input_buffer()
 ser.reset_output_buffer()
@@ -15,7 +15,7 @@ ser.reset_output_buffer()
 cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 
 counter=0
-end_counter=16*1
+end_counter=16*10
 time_loop=np.empty(end_counter)
 len_loop=np.empty(end_counter)
 
@@ -26,7 +26,7 @@ while(True):
     ser.write(b'\x55')
     s=ser.read(2)
     im_len=int.from_bytes(s, "big")
-    print('im_len :'+ str(im_len))
+    # print('im_len :'+ str(im_len))
 
     ser.write(b'\x55')
     s = ser.read(im_len)

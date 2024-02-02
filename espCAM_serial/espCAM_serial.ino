@@ -26,7 +26,7 @@
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
 
-  Serial.begin(500000);                     // Define and start serial monitor
+  Serial.begin(2000000);                     // Define and start serial monitor
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -60,8 +60,8 @@ void setup() {
   //    config.fb_count = 1;
   //  }
 
-  config.frame_size = FRAMESIZE_SVGA;
-  config.jpeg_quality = 20;
+  config.frame_size = FRAMESIZE_VGA;
+  config.jpeg_quality = 25;
   config.fb_count = 1;
 
   // Init Camera
