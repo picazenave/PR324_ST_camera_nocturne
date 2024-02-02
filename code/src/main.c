@@ -21,6 +21,8 @@
 #include "adc.h"
 #include "usart.h"
 #include "gpio.h"
+#include "stdio.h"
+#include "stdint.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -58,6 +60,48 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
+
+int night_detect()
+{
+  int light_sensor = 0;  
+  int night_state = 0;
+    
+  HAL_ADC_Start(&hadc1);
+ 
+  //Get value
+  light_sensor = (int)HAL_ADC_GetValue(&hadc1);
+  // = (int)(4095 - light_sensor)*10000/light_sensor;
+  if (light_sensor<700)
+  {
+    night_state = 1;
+  }
+  else
+  {
+    night_state = 0;
+  }
+  return night_state;
+}
+
+int pir_detection()
+{
+  int movment_detected = 0;
+  if(HAL_GPIO_ReadPin(GPIO_PIR_GPIO_Port, GPIO_PIR_Pin) == 1)
+      {
+        movment_detected = 1;
+      }
+  else
+  {
+    movment_detected = 0;
+  }
+  return movment_detected;
+}
+
+ 
+uint8_t Buffer[25] = {0};
+uint8_t Space[] = " - ";
+uint8_t StartMSG[] = "Starting I2C Scanning: \r\n";
+uint8_t EndMSG[] = "Done! \r\n\r\n";
+
 
 /**
   * @brief  The application entry point.
@@ -101,6 +145,60 @@ int main(void)
   uint8_t uart_in = 0;
   while (1)
   {
+    //uint8_t alerte_mouvement [] = "il y a eu du mouvement\n";
+
+    /////////////////////////////////////////PIR detection 101020353/////////////////////////////////////////
+    int pir_movment = pir_detection();
+    char str2[15];  
+    sprintf(str2, "detection flag : %d\n", pir_movment);
+		HAL_UART_Transmit_IT(&huart2,(uint8_t*)str2,strlen(str2));
+    HAL_Delay(1000);
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////PIR detection ONSEMI PIR-GEVB///////////////////////////////////
+    
+     uint8_t i = 0, ret;
+ 
+    /*-[ I2C Bus Scanning ]-*/
+    HAL_UART_Transmit(&huart2, StartMSG, sizeof(StartMSG), 10000);
+    for(i=1; i<128; i++)
+    {
+        ret = HAL_I2C_IsDeviceReady(&hi2c1, (uint16_t)(i<<1), 3, 5);
+        if (ret != HAL_OK) /* No ACK Received At That Address */
+        {
+            HAL_UART_Transmit(&huart2, Space, sizeof(Space), 10000);
+        }
+        else if(ret == HAL_OK)
+        {
+            sprintf(Buffer, "0x%X", i);
+            HAL_UART_Transmit(&huart2, Buffer, sizeof(Buffer), 10000);
+        }
+    }
+    HAL_UART_Transmit(&huart2, EndMSG, sizeof(EndMSG), 10000);
+    /*--[ Scanning Done ]--*/
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////Light detection 101020132///////////////////////////////////////
+    //init
+    int night_state = night_detect();
+    char str[50]; 
+
+    if(night_state == 1)
+    {
+      sprintf(str, "Il fait nuit.\n"); 
+		  HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
+      HAL_Delay(1000);
+    }
+    else if (night_state==0)
+    {
+      sprintf(str, "Il fait jour.\n"); 
+		  HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
+      HAL_Delay(1000);
+    }
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+
     // HAL_Delay(300);
     if (tick_count % 50 == 0)
       ;//TODO
@@ -121,7 +219,7 @@ int main(void)
     }
     tick_count++;
     /* USER CODE END WHILE */
-
+ 
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
