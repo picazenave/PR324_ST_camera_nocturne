@@ -19,7 +19,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "app_tof.h"
-#include "detection_zone.h"
+
+#include <stdio.h>
+// #include "detection_zone.h"
 
 // #include "i2c.h"
 // #include "spi.h"
@@ -109,16 +111,15 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-    // HAL_UART_Transmit(&huart2, "alive\r\n", 7, 100);
-
     // DetectionZone* obj = create();
 
     // // Call methods on the instance
     // obj->print_matrix8x8(obj->matrix8x8);
 
-    // // Destroy the instance
+    // Destroy the instance
     // destroy(obj);
 
+    printf("A\r\n");
     
     // MX_TOF_Process();
 
