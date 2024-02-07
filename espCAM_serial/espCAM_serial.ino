@@ -23,10 +23,29 @@
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
+struct serial_camera_config_t {
+  byte brightness;
+  byte special_effect;
+  byte jpg_quality;
+  framesize_t frame_size;
+};
+serial_camera_config_t camera_config = {.brightness = 0, .special_effect = 0, .jpg_quality = 30, .frame_size = FRAMESIZE_VGA};
+
+uint16_t fb_size = 0;
+camera_fb_t * fb = NULL;
+bool picture_ready = false;
+
+bool serial_init_done = false;
+bool setup_done = false;
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
 
   Serial.begin(2000000);                     // Define and start serial monitor
+
+  while (serial_init_done == false)
+  {
+    dispatch_serial_command();
+  }
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -50,50 +69,123 @@ void setup() {
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
 
-  //  if(psramFound()){
-  //    config.frame_size = FRAMESIZE_UXGA; // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
-  //    config.jpeg_quality = 10;
-  //    config.fb_count = 2;
-  //  } else {
-  //    config.frame_size = FRAMESIZE_SVGA;
-  //    config.jpeg_quality = 12;
-  //    config.fb_count = 1;
-  //  }
-
-  config.frame_size = FRAMESIZE_VGA;
-  config.jpeg_quality = 25;
+  config.frame_size = camera_config.frame_size;
+  config.jpeg_quality = camera_config.jpg_quality;
   config.fb_count = 1;
 
   // Init Camera
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
     Serial.printf("Camera init failed with error 0x%x", err);
-    return;
+    while (1)
+      Serial.write(0xAA);
   }
+
+  sensor_t * s = esp_camera_sensor_get();
+  s->set_brightness(s, camera_config.brightness);
+  s->set_special_effect(s, camera_config.special_effect);
+
+  setup_done = true;
 }
 
 void loop() {
-  uint16_t startIndex = 0;
-  camera_fb_t * fb = NULL;
-  //Take Picture with Camera
-  fb = esp_camera_fb_get();
+  dispatch_serial_command();
+}
 
+char wait_for_serial()
+{
   char r = 0;
-  while (r != 0x55) {
-    while (!Serial.available());
-    r = Serial.read();
-  }
-  uint16_t fb_size = fb->len;
-  Serial.write(uint8_t(fb_size >> 8));
-  Serial.write(uint8_t(fb_size & 0xFF));
+  while (!Serial.available());
+  r = Serial.read();
 
-  while (r != 0x55) {
-    while (!Serial.available());
-    r = Serial.read();
-  }
-  for (unsigned int i = 0; i < fb->len; i++)
+  return r;
+}
+
+void dispatch_serial_command()
+{
+  char r = wait_for_serial();
+  char temp = 0;
+  switch (r)
   {
-    Serial.write(fb->buf[i]);
+    case 0xAA : //ACK
+      temp=(setup_done+serial_init_done<<1);
+      Serial.write(temp);
+      break;
+    case 0xA1 : // start config
+      //other chip reset but not esp so restart fresh
+      if (serial_init_done || setup_done) {
+        pinMode(PWDN_GPIO_NUM, OUTPUT);
+        digitalWrite(PWDN_GPIO_NUM, HIGH);
+        delay(10);
+        digitalWrite(PWDN_GPIO_NUM, LOW);
+        delay(10);
+
+        pinMode(RESET_GPIO_NUM, OUTPUT);
+        digitalWrite(RESET_GPIO_NUM, LOW);
+        delay(10);
+        digitalWrite(RESET_GPIO_NUM, HIGH);
+        delay(10);
+        esp_restart();
+      }
+
+      break;
+    case 0xA2 : //end config
+      serial_init_done = true;
+      break;
+    case 0x55 : //get jpg
+      fb = NULL;
+      fb = esp_camera_fb_get();
+      fb_size = fb->len;
+      Serial.write(uint8_t(fb_size >> 8));
+      Serial.write(uint8_t(fb_size & 0xFF));
+      for (unsigned int i = 0; i < fb->len; i++)
+      {
+        Serial.write(fb->buf[i]);
+      }
+      esp_camera_fb_return(fb);
+      break;
+    case 0x34 : //set brightness
+      camera_config.brightness = wait_for_serial();
+      break;
+    case 0x33 : //set special effect
+      camera_config.special_effect = wait_for_serial();
+      break;
+    case 0x22 : //set jpg quality
+      camera_config.jpg_quality = wait_for_serial();
+      break;
+    case 0x11 : // set frame size
+      temp = wait_for_serial();
+      switch (temp)
+      {
+        case 0:
+          camera_config.frame_size = FRAMESIZE_UXGA;
+          break;
+        case 1:
+          camera_config.frame_size = FRAMESIZE_QVGA;
+          break;
+        case 2:
+          camera_config.frame_size = FRAMESIZE_CIF;
+          break;
+        case 3:
+          camera_config.frame_size = FRAMESIZE_VGA;
+          break;
+        case 4:
+          camera_config.frame_size = FRAMESIZE_SVGA;
+          break;
+        case 5:
+          camera_config.frame_size = FRAMESIZE_XGA;
+          break;
+        case 6:
+          camera_config.frame_size = FRAMESIZE_SXGA;
+          break;
+        default:
+          camera_config.frame_size = FRAMESIZE_QVGA;
+          break;
+      }
+      break;
+
+    default :
+      break;
   }
-  esp_camera_fb_return(fb);   //clear camera memory
+
 }

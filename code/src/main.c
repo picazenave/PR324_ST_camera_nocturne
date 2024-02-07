@@ -49,7 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t img_buffer[70000] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,9 +64,9 @@ void SystemClock_Config(void);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -96,44 +96,108 @@ int main(void)
   MX_I2C1_Init();
   MX_SPI1_Init();
   MX_FATFS_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   /**
    * I2C scanner
    */
-  HAL_UART_Transmit(&huart2, (uint8_t *)"Scanning I2C bus:\r\n", 19, 100);
-  HAL_StatusTypeDef result;
-  uint8_t i;
-  for (i = 1; i < 128; i++)
-  {
-    /*
-     * the HAL wants a left aligned i2c address
-     * &hi2c1 is the handle
-     * (uint16_t)(i<<1) is the i2c address left aligned
-     * retries 2
-     * timeout 2
-     */
-    result = HAL_I2C_IsDeviceReady(&hi2c1, (uint16_t)(i << 1), 10, 100);
-    if (result != HAL_OK) // HAL_ERROR or HAL_BUSY or HAL_TIMEOUT
-    {
-      HAL_UART_Transmit(&huart2, (uint8_t *)".", 1, 100); // No ACK received at that address
-    }
-    if (result == HAL_OK)
-    {
-      char buffer[32];
-      int size = snprintf(buffer, 32, "0x%X", i);
-      HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100); // Received an ACK at that address
-    }
-  }
-  HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", 2, 100);
+  // HAL_UART_Transmit(&huart2, (uint8_t *)"Scanning I2C bus:\r\n", 19, 100);
+  // HAL_StatusTypeDef result;
+  // uint8_t i;
+  // for (i = 1; i < 128; i++)
+  // {
+  //   /*
+  //    * the HAL wants a left aligned i2c address
+  //    * &hi2c1 is the handle
+  //    * (uint16_t)(i<<1) is the i2c address left aligned
+  //    * retries 2
+  //    * timeout 2
+  //    */
+  //   result = HAL_I2C_IsDeviceReady(&hi2c1, (uint16_t)(i << 1), 10, 100);
+  //   if (result != HAL_OK) // HAL_ERROR or HAL_BUSY or HAL_TIMEOUT
+  //   {
+  //     HAL_UART_Transmit(&huart2, (uint8_t *)".", 1, 100); // No ACK received at that address
+  //   }
+  //   if (result == HAL_OK)
+  //   {
+  //     char buffer[32];
+  //     int size = snprintf(buffer, 32, "0x%X", i);
+  //     HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 100); // Received an ACK at that address
+  //   }
+  // }
+  // HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", 2, 100);
   /*
    * Camera init
    */
+  printf("\r\n=====Camera Init=====\r\n\r\n");
+  uint8_t to_transmit[2] = {0xA1, 0};
+  uint8_t received = 0;
+  uint32_t uart1_timeout = 300;
+
+  HAL_StatusTypeDef status = HAL_ERROR;
+  status = HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
+
+  HAL_Delay(1000);
+  to_transmit[0] = 0xAA;
+  status = HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
+  status = HAL_UART_Receive(&huart1, &received, 1, uart1_timeout);
+  if (status != HAL_OK)
+  {
+    printf("ACK receive error:0x%X\r\n", status);
+    while (1)
+      ;
+  }
+  if (received != 0x00)
+  {
+    printf("ACK receive not 0x00:0x%X\r\n", received);
+    while (1)
+      ;
+  }
+  // brightness
+  to_transmit[0] = 0x34;
+  to_transmit[1] = 0x00;
+  status = HAL_UART_Transmit(&huart1, to_transmit, 2, uart1_timeout);
+  // special effect
+  to_transmit[0] = 0x33;
+  to_transmit[1] = 0x00;
+  status = HAL_UART_Transmit(&huart1, to_transmit, 2, uart1_timeout);
+  // jpg_quality
+  to_transmit[0] = 0x22;
+  to_transmit[1] = 0x1E; // 30
+  status = HAL_UART_Transmit(&huart1, to_transmit, 2, uart1_timeout);
+  // frame_size
+  to_transmit[0] = 0x11;
+  to_transmit[1] = 0x03; // 30
+  status = HAL_UART_Transmit(&huart1, to_transmit, 2, uart1_timeout);
+  // end of config
+  to_transmit[0] = 0xA2;
+  status = HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
+
+  to_transmit[0] = 0xAA;
+  status = HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
+  status = HAL_UART_Receive(&huart1, &received, 1, uart1_timeout);
+  if (status != HAL_OK)
+  {
+    printf("ACK end config receive error:0x%X\r\n", status);
+    while (1)
+      ;
+  }
+  if (received != 0x04)
+  {
+    printf("ACK end config receive not 0x04:0x%X\r\n", received);
+    while (1)
+      ;
+  }
+  printf("Camera init DONE\r\n");
   /**
    * SD test
    */
   printf("\r\n~ SD card demo by kiwih ~\r\n\r\n");
+  img_buffer[2] = 1;
+  img_buffer[29999] = 1;
 
-  HAL_Delay(1000); // a short delay is important to let the SD card settle
+  // not needed bc camera init is already >1sec
+  // HAL_Delay(1000); // a short delay is important to let the SD card settle
 
   // some variables for FatFs
   FATFS FatFs;  // Fatfs handle
@@ -172,7 +236,7 @@ int main(void)
   fres = f_open(&fil, "test.txt", FA_READ);
   if (fres != FR_OK)
   {
-    printf("f_open error (%i)\r\n",fres);
+    printf("f_open error (%i)\r\n", fres);
     while (1)
       ;
   }
@@ -217,15 +281,57 @@ int main(void)
   }
   else
   {
-    printf("f_write error (%i)\r\n",fres);
+    printf("f_write error (%i)\r\n", fres);
   }
 
   // Be a tidy kiwi - don't forget to close your file!
   f_close(&fil);
 
   // We're done, so de-mount the drive
-  f_mount(NULL, "", 0);
+  // f_mount(NULL, "", 0); //FIXME demount drive
 
+  /**
+   * Test jpg saving
+   */
+  printf("\r\n=====Test jpg saving=====\r\n\r\n");
+  // Now let's try and write a file "write.txt"
+  if (fres != FR_OK)
+  {
+    printf("f_unlink error (%i)\r\n", fres);
+  }
+  fres = f_open(&fil, "test.jpg", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+  if (fres != FR_OK)
+  {
+    printf("f_open error (%i)\r\n", fres);
+  }
+  // get jpg data
+  to_transmit[0]=0x55;
+  HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
+  uint16_t img_len = 0;
+  HAL_UART_Receive(&huart1, &img_len, 2, uart1_timeout);
+  //printf("im_len=%u\r\n", img_len);
+  HAL_UART_Receive(&huart1, img_buffer, img_len, 2000);
+  printf("jpg received\r\n");
+
+  // img_buffer[0]=0xFF;
+  // img_buffer[1]=0xD8;
+  fres = f_write(&fil, img_buffer, img_len, &bytesWrote);
+  if (fres == FR_OK)
+  {
+    printf("Wrote %i bytes to 'test.jpg'!\r\n", bytesWrote);
+  }
+  else
+  {
+    printf("f_write error (%i)\r\n", fres);
+  }
+
+  // Be a tidy kiwi - don't forget to close your file!
+  f_close(&fil);
+
+  for(u_int32_t i=0;i<img_len;i++)
+  printf("%X",img_buffer[i]);
+
+  printf("\r\n\r\n DONE \r\n", fres);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -238,6 +344,7 @@ int main(void)
     if (tick_count % 10000 == 0)
       HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
 
+    HAL_Delay(10);
     tick_count++;
     /* USER CODE END WHILE */
 
@@ -247,22 +354,22 @@ int main(void)
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
-  */
+   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
 
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -278,9 +385,8 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -297,9 +403,9 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -311,14 +417,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
