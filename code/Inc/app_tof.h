@@ -1,13 +1,14 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    adc.h
-  * @brief   This file contains all the function prototypes for
-  *          the adc.c file
+  * @file          : app_tof.h
+  * @author        : IMG SW Application Team
+  * @brief         : This file provides code for the configuration
+  *                  of the STMicroelectronics.X-CUBE-TOF1.3.4.0 instances.
   ******************************************************************************
+  *
   * @attention
   *
-  * Copyright (c) 2024 STMicroelectronics.
+  * Copyright (c) 2023 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -16,37 +17,25 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __ADC_H__
-#define __ADC_H__
+#ifndef __APP_TOF_H
+#define __APP_TOF_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
 
-/* USER CODE BEGIN Includes */
+/* Exported defines ----------------------------------------------------------*/
 
-/* USER CODE END Includes */
-
-extern ADC_HandleTypeDef hadc1;
-
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
-
-void MX_ADC1_Init(void);
-
-/* USER CODE BEGIN Prototypes */
-
-/* USER CODE END Prototypes */
+/* Exported functions --------------------------------------------------------*/
+void MX_TOF_Init(void);
+void MX_TOF_Process(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __ADC_H__ */
-
+#endif /* __APP_TOF_H */

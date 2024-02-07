@@ -1,13 +1,12 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    spi.h
-  * @brief   This file contains all the function prototypes for
-  *          the spi.c file
+  * @file    app_tof_pin_conf.h
+  * @author  IMG SW Application Team
+  * @brief   This file contains definitions for TOF pins
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2024 STMicroelectronics.
+  * Copyright (c) 2023 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -16,37 +15,24 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __SPI_H__
-#define __SPI_H__
+#ifndef __APP_TOF_PIN_CONF_H__
+#define __APP_TOF_PIN_CONF_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32f4xx_hal.h"
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-extern SPI_HandleTypeDef hspi1;
-
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
-
-void MX_SPI1_Init(void);
-
-/* USER CODE BEGIN Prototypes */
-
-/* USER CODE END Prototypes */
+/* Exported symbols ----------------------------------------------------------*/
+#define TOF_INT_EXTI_PIN    (GPIO_PIN_4)
+#define TOF_INT_EXTI_PORT   (GPIOA)
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __SPI_H__ */
-
+#endif /* __APP_TOF_PIN_CONF_H__ */
