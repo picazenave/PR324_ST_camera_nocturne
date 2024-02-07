@@ -30,6 +30,8 @@ extern "C" {
 #include "custom_ranging_sensor.h"
 #include "stm32f4xx_nucleo.h"
 
+#include "detection_zone.h"
+
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
@@ -215,7 +217,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
   CUSTOM_RANGING_SENSOR_ReadID(CUSTOM_VL53L5CX, &Id);
   CUSTOM_RANGING_SENSOR_GetCapabilities(CUSTOM_VL53L5CX, &Cap);
 
-  Profile.RangingProfile = RS_PROFILE_4x4_CONTINUOUS;
+  Profile.RangingProfile = RS_PROFILE_8x8_CONTINUOUS;
   Profile.TimingBudget = TIMING_BUDGET;
   Profile.Frequency = RANGING_FREQUENCY; /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
   Profile.EnableAmbient = 0; /* Enable: 1, Disable: 0 */
@@ -234,8 +236,17 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
     if (status == BSP_ERROR_NONE)
     {
       print_result(&Result);
-      detection_animal(&Result);
+
+      DetectionZone* obj = create();
+      uint32_t matrix8x8[8][8];
+      obj->sensor2matrix(&Result, matrix8x8); 
+      obj->print_matrix8x8(matrix8x8);
+
+      while(1);
+
+      // detection_animal(&Result);
     }
+
 
     if (com_has_data())
     {
@@ -244,6 +255,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
 
     HAL_Delay(POLLING_PERIOD);
   }
+  
 }
 #endif /* USE_BARE_DRIVER */
 

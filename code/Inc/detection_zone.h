@@ -19,7 +19,7 @@ struct DetectionZone {
 
     // Pointeurs de fonction
     void (*sensor2matrix)(RANGING_SENSOR_Result_t *pResult, uint32_t matrix8x8[8][8]);
-    void (*print_matrix8x8)(DetectionZone* obj);
+    void (*print_matrix8x8)(uint32_t matrix8x8[8][8]);
     void (*matrix_pattern)(DetectionZone* obj);
     void (*calcul_counters)(DetectionZone* obj);
     void (*print_counters)(DetectionZone* obj);

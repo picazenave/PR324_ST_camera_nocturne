@@ -6,21 +6,29 @@
 
 // Converte the ranging sensor to a matrix 8x8
 static void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint32_t matrix8x8[8][8]) {
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
-            matrix8x8[i][j] = pResult->ZoneResult[i + j].Distance[0];
+
+    for (int j = 0; j < 64; j += 8)
+    {
+        for (int k = (8 - 1); k >= 0; k--)
+        {
+            for (int i = 0; i < 8; ++i) {
+                for (int ii = 0; ii < 8; ++ii) {
+                    matrix8x8[i][ii] = pResult->ZoneResult[j + k].Distance[0];
+                }
+            }
         }
     }
+
 }
 
 // Print the matrix 8<8
-static void print_matrix8x8(DetectionZone* obj) {
-    printf("Printing 8x8 matrix:\n");
+static void print_matrix8x8(uint32_t matrix8x8[8][8]) {
+    printf("Printing 8x8 matrix:\r\n");
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
-            printf("%8u ", obj->matrix8x8[i][j]);
+            printf("%8u ", matrix8x8[i][j]);
         }
-        printf("\n");
+        printf("\r\n");
     }
 }
 
@@ -56,9 +64,9 @@ static void calcul_counters(DetectionZone* obj) {
 
 // Print the counter table
 static void print_counters(DetectionZone* obj) {
-    printf("Counters:\n");
+    printf("Counters:\r\n");
     for (int i = 0; i < 5; ++i) {
-        printf("Counter %d: %d\n", i + 1, obj->counters[i]);
+        printf("Counter %d: %d\r\n", i + 1, obj->counters[i]);
     }
 }
 
@@ -71,15 +79,15 @@ int compare(DetectionZone* obj, DetectionZone* obj_new, int comparaison[5]){
         int value = obj_new->counters[i] - obj->counters[i];
         switch (value) {
         case 0:
-            printf("You entered zero.\n");
+            printf("You entered zero.\r\n");
             comparaison[i] = STABLE;
             break;
         case 1:
-            printf("You entered a positive number.\n");
+            printf("You entered a positive number.\r\n");
             comparaison[i] = INCREASE;
             break;
         default:
-            printf("You entered a negative number.\n");
+            printf("You entered a negative number.\r\n");
             comparaison[i] = DECREASE;
         }      
     }
@@ -146,14 +154,12 @@ DetectionZone* create() {
         for (int i = 0; i < 5; ++i) {
             obj->counters[i] = 0;
         }
-        for (int i = 0; i < 5; ++i) {
-            obj->counters[i] = 0;
-        }
-        matrix_pattern(obj);
+        // matrix_pattern(obj);
         obj->print_matrix8x8 = print_matrix8x8;
         obj->calcul_counters = calcul_counters;
         obj->print_counters = print_counters;
         obj->check = check;
+        obj->sensor2matrix = sensor2matrix;
     }
 
     return obj;

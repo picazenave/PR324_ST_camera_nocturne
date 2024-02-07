@@ -98,8 +98,8 @@ int main(void)
   MX_GPIO_Init();
   // MX_USART2_UART_Init();
 
-  // MX_RTC_Init();
-  // MX_TOF_Init();
+  MX_RTC_Init();
+  MX_TOF_Init();
 
   /* USER CODE BEGIN 2 */
 
@@ -111,17 +111,7 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-    // DetectionZone* obj = create();
-
-    // // Call methods on the instance
-    // obj->print_matrix8x8(obj->matrix8x8);
-
-    // Destroy the instance
-    // destroy(obj);
-
-    printf("A\r\n");
-    
-    // MX_TOF_Process();
+    MX_TOF_Process();
 
     // distance_value[indice];
     
