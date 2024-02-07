@@ -160,26 +160,6 @@ int main(void)
       HAL_UART_Transmit(&huart2, (uint8_t *)text, strlen(text), 100);
     }
 
-    // if(!isAlive)
-    // {
-    //   text = "VL53L5CX not detected at requested address (0x";
-    //   HAL_UART_Transmit(&huart2, (uint8_t *)text, strlen(text), 100);
-    //   HAL_UART_Transmit(&huart2, (uint8_t *)Dev.platform.address, sizeof(Dev.platform.address), 100);
-    //   text = ")\n";
-    //   HAL_UART_Transmit(&huart2, (uint8_t *)text, strlen(text), 100);
-    //   // ///HAL_Delay(1000);
-    //   // return 255;
-    // }
-
-    // text = "Sensor initializing, please wait few seconds\n";
-    // HAL_UART_Transmit(&huart2, (uint8_t *)text, strlen(text), 100);
-
-    // status = vl53l5cx_init(&Dev);
-    // status = vl53l5cx_set_ranging_frequency_hz(&Dev, 2);				// Set 2Hz ranging frequency
-    // status = vl53l5cx_set_ranging_mode(&Dev, VL53L5CX_RANGING_MODE_CONTINUOUS);  // Set mode continuous
-
-    // text = "Ranging starts\n";
-    // HAL_UART_Transmit(&huart2, (uint8_t *)text, strlen(text), 100);
 
     /* (Mandatory) Init VL53L5CX sensor */
     status = vl53l5cx_init(&Dev);
@@ -204,6 +184,8 @@ int main(void)
 
     status = vl53l5cx_start_ranging(&Dev);
 
+
+
     status = vl53l5cx_set_resolution(&Dev, VL53L5CX_RESOLUTION_8X8);
     status = vl53l5cx_get_resolution(&Dev, &resolution);
     // Affichez la résolution
@@ -211,6 +193,25 @@ int main(void)
     if (len >= 0 && len < sizeof(buffer)) {
       HAL_UART_Transmit(&huart2, (uint8_t *)buffer, len, HAL_MAX_DELAY);
     }
+
+    /* Set ranging frequency to 10Hz.
+    * Using 4x4, min frequency is 1Hz and max is 60Hz
+    * Using 8x8, min frequency is 1Hz and max is 15Hz
+    */
+    status = vl53l5cx_set_ranging_frequency_hz(&Dev, 10);
+    if(status)
+    {
+      snprintf(buffer, sizeof(buffer), "vl53l5cx_set_ranging_frequency_hz failed, status %u\n", status);
+      HAL_UART_Transmit(&huart2, (uint8_t *)buffer, len, HAL_MAX_DELAY);
+      return status;
+    }
+
+    /* Using autonomous mode, the integration time can be updated (not possible
+    * using continuous) */
+    status = vl53l5cx_set_integration_time_ms(&Dev, 20);
+
+    
+
 
 		status = vl53l5cx_get_ranging_data(&Dev, &Results);
     for (int i = 0; i < resolution; i++) {
