@@ -38,6 +38,28 @@ extern "C" {
 #define TIMING_BUDGET (30U) /* 5 ms < TimingBudget < 100 ms */
 #define RANGING_FREQUENCY (5U) /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
 #define POLLING_PERIOD (1000U/RANGING_FREQUENCY) /* refresh rate for polling mode (milliseconds) */
+#define NB_SEUIL_ZONE (4U)
+#define TOO_CLOSE (300U)
+#define RANGE_MAX (1000U)
+
+// Définition des couleurs
+#define BLACK      "\x1b[30m"
+#define RED        "\x1b[31m"
+#define GREEN      "\x1b[32m"
+#define YELLOW     "\x1b[33m"
+#define BLUE       "\x1b[34m"
+#define MAGENTA    "\x1b[35m"
+#define CYAN       "\x1b[36m"
+#define WHITE      "\x1b[37m"
+#define RESET      "\x1b[0m"
+#define BG_BLACK   "\x1b[40m"
+#define BG_RED     "\x1b[41m"
+#define BG_GREEN   "\x1b[42m"
+#define BG_YELLOW  "\x1b[43m"
+#define BG_BLUE    "\x1b[44m"
+#define BG_MAGENTA "\x1b[45m"
+#define BG_CYAN    "\x1b[46m"
+#define BG_WHITE   "\x1b[47m"
 
 /* Private variables ---------------------------------------------------------*/
 #ifndef USE_BARE_DRIVER
@@ -57,6 +79,7 @@ static int32_t convert_data_format(VL53L5CX_Object_t *pObj,
 #endif
 static void MX_VL53L5CX_SimpleRanging_Init(void);
 static void MX_VL53L5CX_SimpleRanging_Process(void);
+static void detection_animal(RANGING_SENSOR_Result_t *Result);
 static void print_result(RANGING_SENSOR_Result_t *Result);
 static void toggle_resolution(void);
 static void toggle_signal_and_ambient(void);
@@ -211,6 +234,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
     if (status == BSP_ERROR_NONE)
     {
       print_result(&Result);
+      detection_animal(&Result);
     }
 
     if (com_has_data())
@@ -223,8 +247,69 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
 }
 #endif /* USE_BARE_DRIVER */
 
+static void detection_animal(RANGING_SENSOR_Result_t *Result)
+{
+  uint8_t nombre_zone = 0;
+  uint8_t lock_init = 0;
+  // int8_t i;
+  int8_t j;
+  int8_t k;
+  int8_t l;
+  uint8_t zones_per_line;
+
+  zones_per_line = ((Profile.RangingProfile == RS_PROFILE_8x8_AUTONOMOUS) ||
+                    (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
+
+  nombre_zone = 0;
+
+  for (j = 0; j < Result->NumberOfZones; j += zones_per_line)
+  {
+    for (l = 0; l < RANGING_SENSOR_NB_TARGET_PER_ZONE; l++)
+    {
+      /* Print distance and status */
+      for (k = (zones_per_line - 1); k >= 0; k--)
+      {
+        if (Result->ZoneResult[j + k].NumberOfTargets > 0)
+        {
+          if ((long)Result->ZoneResult[j + k].Distance[l] < TOO_CLOSE)
+          {
+            // nombre_zone++;
+            // printf("| \033[38;5;9m%5ld\033[0m  :  %5ld ",
+            // printf("| " RED "%5ld" RESET "  :  %5ld ",
+            //        (long)Result->ZoneResult[j + k].Distance[l],
+            //        (long)Result->ZoneResult[j + k].Status[l]);
+          }
+          else if ((long)Result->ZoneResult[j + k].Distance[l] < RANGE_MAX)
+          {
+            nombre_zone++;
+            // printf("| \033[38;5;10m%5ld\033[0m  :  %5ld ",
+            // printf("| " GREEN "%5ld" RESET "  :  %5ld ",
+            //        (long)Result->ZoneResult[j + k].Distance[l],
+            //        (long)Result->ZoneResult[j + k].Status[l]);
+          }
+          else
+          {
+            // printf("| \033[38;5;3m%5ld\033[0m  :  %5ld ",
+            // printf("| " YELLOW "%5ld" RESET "  :  %5ld ",
+            //        (long)Result->ZoneResult[j + k].Distance[l],
+            //        (long)Result->ZoneResult[j + k].Status[l]);
+          }
+        }
+        // else
+        //   printf("| %5s  :  %5s ", "X", "X");
+      }
+      // printf("|\r\n");
+    }
+  }
+
+  // printf("\r\n");
+
+  printf("Nombre de zone entre %d et %d : %d/%ld\r\n", TOO_CLOSE, RANGE_MAX, nombre_zone, Result->NumberOfZones);
+}
+
 static void print_result(RANGING_SENSOR_Result_t *Result)
 {
+  uint8_t nombre_zone = 0;
   int8_t i;
   int8_t j;
   int8_t k;
@@ -248,6 +333,8 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
 
   printf("\r\n\r\n");
 
+  // nombre_zone = 0;
+
   for (j = 0; j < Result->NumberOfZones; j += zones_per_line)
   {
     for (i = 0; i < zones_per_line; i++) /* number of zones per line */
@@ -269,15 +356,26 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
       {
         if (Result->ZoneResult[j + k].NumberOfTargets > 0)
         {
-          if ((long)Result->ZoneResult[j + k].Distance[l] < 500)
+          if ((long)Result->ZoneResult[j + k].Distance[l] < TOO_CLOSE)
           {
-            printf("| \033[38;5;9m%5ld\033[0m  :  %5ld ",
+            // nombre_zone++;
+            // printf("| \033[38;5;9m%5ld\033[0m  :  %5ld ",
+            printf("| " RED "%5ld" RESET "  :  %5ld ",
+                   (long)Result->ZoneResult[j + k].Distance[l],
+                   (long)Result->ZoneResult[j + k].Status[l]);
+          }
+          else if ((long)Result->ZoneResult[j + k].Distance[l] < RANGE_MAX)
+          {
+            // nombre_zone++;
+            // printf("| \033[38;5;10m%5ld\033[0m  :  %5ld ",
+            printf("| " GREEN "%5ld" RESET "  :  %5ld ",
                    (long)Result->ZoneResult[j + k].Distance[l],
                    (long)Result->ZoneResult[j + k].Status[l]);
           }
           else
           {
-            printf("| \033[38;5;10m%5ld\033[0m  :  %5ld ",
+            // printf("| \033[38;5;3m%5ld\033[0m  :  %5ld ",
+            printf("| " YELLOW "%5ld" RESET "  :  %5ld ",
                    (long)Result->ZoneResult[j + k].Distance[l],
                    (long)Result->ZoneResult[j + k].Status[l]);
           }
@@ -321,6 +419,8 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
     printf(" -----------------");
   }
   printf("\r\n");
+
+  // printf("Nombre de zone < 500 : %d/%ld\r\n", nombre_zone, Result->NumberOfZones);
 }
 
 static void toggle_resolution(void)

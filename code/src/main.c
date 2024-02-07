@@ -67,6 +67,8 @@ static void MX_RTC_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  long distance_value[64];
+  uint8_t indice = 0;
 
   /* USER CODE END 1 */
 
@@ -99,8 +101,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+    
+    MX_TOF_Process();
 
-  MX_TOF_Process();
+    // distance_value[indice];
+    
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
