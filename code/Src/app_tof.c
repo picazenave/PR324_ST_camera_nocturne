@@ -91,6 +91,10 @@ static void handle_cmd(uint8_t cmd);
 static uint8_t get_key(void);
 static uint32_t com_has_data(void);
 
+
+DetectionZone_t detect;
+
+
 void MX_TOF_Init(void)
 {
   /* USER CODE BEGIN SV */
@@ -235,16 +239,17 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
 
     if (status == BSP_ERROR_NONE)
     {
+
+      uint8_t zones_per_line = ((Profile.RangingProfile == RS_PROFILE_8x8_AUTONOMOUS) ||
+                    (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
+      
       print_result(&Result);
+      
+      sensor2matrix(&Result, zones_per_line, &detect);
+      print_matrix8x8(&detect);
+      calcul_counters(&detect);
 
-      DetectionZone* obj = create();
-      uint32_t matrix8x8[8][8];
-      // obj->sensor2matrix(&Result, matrix8x8); 
-      // obj->print_matrix8x8(matrix8x8);
-
-      check(obj, &Result);
-
-      destroy(obj);
+      // check(detect, &Result);
 
       HAL_Delay(5000);
 
@@ -335,7 +340,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
   zones_per_line = ((Profile.RangingProfile == RS_PROFILE_8x8_AUTONOMOUS) ||
                     (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
 
-  display_commands_banner();
+  // display_commands_banner();
 
   printf("Cell Format :\r\n\r\n");
   for (l = 0; l < RANGING_SENSOR_NB_TARGET_PER_ZONE; l++)
