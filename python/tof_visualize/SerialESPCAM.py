@@ -8,7 +8,7 @@ from enum import Enum
 
 window_name='Serial ESPCAM'
 
-ser = serial.Serial('COM9', 2000000,timeout=0.8)
+ser = serial.Serial('COM9', 2000000,timeout=4)
 print(ser.name)
 ser.reset_input_buffer()
 ser.reset_output_buffer()
@@ -59,7 +59,7 @@ else :
     ser.write(b'\x00')
     #jpg quality
     ser.write(b'\x22')
-    ser.write(b'\x1E') #30
+    ser.write(b'\x1E')
     #frame size
     ser.write(b'\x11')
     ser.write(b'\x06')
@@ -73,11 +73,11 @@ else :
     if a!=b'\x04' :
         print("ACK setup done KO:"+str((a).hex()))
         exit()
-    print("wait for awb to be OK")
-    time.sleep(2)
 
 print("INIT DONE")
 #// 800x600
+s_array: bytearray
+s_array=[]
 while(True):
     start = time.time()
 
@@ -85,15 +85,45 @@ while(True):
     s=ser.read(2)
     im_len=int.from_bytes(s, "big")
     print('im_len :'+ str(im_len))
-    ser.write(b'\x55')
-    s = ser.read(im_len)
-    s_byte=np.frombuffer(s,dtype=np.uint8)
+    # ser.write(b'\x55')
+    # s = ser.read(im_len)
+    if im_len == 65000:
+        while im_len==65000 :
+            ser.write(b'\x55')
+            s = ser.read(im_len)
+            s_array.extend(s)
+            ser.write(b'\x55')
+            s=ser.read(2)
+            im_len=int.from_bytes(s, "big")
+            print('im_len boucle :'+ str(im_len))
+
+        print("derniere lecture après boucle")
+        ser.write(b'\x55')
+        s = ser.read(im_len)
+        s_array.extend(s)
+        s_byte=np.frombuffer(bytes(s_array),dtype=np.uint8)
+        print('s_array apres boucle size :'+ str(len(s_array)))
+    else :
+        print("lecture sans boucle")
+        ser.write(b'\x55')
+        s = ser.read(im_len)
+        s_byte=np.frombuffer(s,dtype=np.uint8)
+
+
+    #s_byte=np.frombuffer(s,dtype=np.uint8)
+    
         
     #ser.reset_input_buffer() # loose synchro
-    im = cv2.imdecode(s_byte,cv2.IMREAD_UNCHANGED)
-    cv2.imshow(window_name, im)
-    cv2.waitKey(1)  # it's needed, but no problem, it won't pause/wait
-
+    try :
+        im = cv2.imdecode(s_byte,cv2.IMREAD_UNCHANGED)
+        cv2.imshow(window_name, im)
+        cv2.waitKey(1) 
+    except :
+        print("cv2 decode error")
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
+        ser.read_all()
+    
     time_loop[counter]=time.time()-start
     len_loop[counter]=im_len
     counter=counter+1

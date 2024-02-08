@@ -41,7 +41,7 @@
 /* USER CODE BEGIN PD */
 #define CHECK_HAL_STATUS_OR_PRINT(status) \
   if (status != HAL_OK)                   \
-    printf("lg:%d KO:0x%.2X", __LINE__, status);
+    printf("lg:%d KO:0x%.2X \r\n", __LINE__, status);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,7 +52,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t img_buffer[65500] = {0}; //uint16_t max is 65535
+uint8_t img_buffer[65500] = {0}; // uint16_t max is 65535
 volatile uint8_t uart_rx_done = 0;
 volatile uint8_t HT = 0;
 volatile uint8_t TC = 0;
@@ -74,8 +74,8 @@ struct serial_camera_config_t
   uint8_t jpg_quality;
   uint8_t frame_size;
 };
-struct serial_camera_config_t camera_config = {.brightness = 0, .special_effect = 0, .jpg_quality = 30, .frame_size = FRAMESIZE_UXGA};
-uint8_t use_default_camera_config=1;
+struct serial_camera_config_t camera_config = {.brightness = 0, .special_effect = 2, .jpg_quality = 20, .frame_size = FRAMESIZE_SVGA};
+uint8_t use_default_camera_config = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -206,18 +206,35 @@ int main(void)
    * Test jpg saving
    */
   printf("\r\n=====Test jpg saving=====\r\n\r\n");
-  fres = f_open(&fil, "test.jpg", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+  // find next jpg name
+  uint16_t jpg_counter = 0;
+  char jpg_name[20] = {0};
+  snprintf(jpg_name, 20, "photo%u.jpg\0", jpg_counter);
+  fres = f_open(&fil, jpg_name, FA_READ);
+  while (fres == FR_OK)
+  {
+    snprintf(jpg_name, 20, "photo%u.jpg\0", jpg_counter);
+    fres = f_open(&fil, jpg_name, FA_READ);
+    if (fres != FR_OK)
+    {
+      break;
+    }
+    f_close(&fil);
+    jpg_counter++;
+  }
+  fres = f_open(&fil, jpg_name, FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
   if (fres != FR_OK)
   {
     printf("f_open error (%i)\r\n", fres);
   }
+  printf("Current img name :%s \r\n", jpg_name);
   // DMA receive
-  uint8_t uart1_timeout = 200;
+  uint16_t uart1_timeout = 1000;
   uint8_t to_transmit[2] = {0, 0};
   to_transmit[0] = 0x55;
   HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
   uint8_t img_len_buffer[2] = {0, 0};
-  HAL_UART_Receive(&huart1, img_len_buffer, 2, 1000);
+  HAL_UART_Receive(&huart1, img_len_buffer, 2, uart1_timeout);
   uint16_t img_len = (img_len_buffer[0] << 8) + img_len_buffer[1];
   printf("im_len DMA=%u\r\n", img_len);
 
@@ -227,7 +244,7 @@ int main(void)
     Error_Handler();
   }
   printf("DMA NDTR before get jpg:%lu\r\n", DMA2_Stream2->NDTR);
-  //start get jpg
+  // start get jpg
   HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
 
   // wait end of transfer
@@ -240,7 +257,7 @@ int main(void)
   fres = f_write(&fil, img_buffer, img_len, &bytesWrote);
   if (fres == FR_OK)
   {
-    printf("Wrote %i bytes to 'test.jpg'!\r\n", bytesWrote);
+    printf("Wrote %i bytes to %s!\r\n", bytesWrote, jpg_name);
   }
   else
   {
@@ -328,7 +345,7 @@ HAL_StatusTypeDef camera_init(uint8_t default_config)
 {
   uint8_t to_transmit[2] = {0xA1, 0};
   uint8_t received = 0;
-  uint32_t uart1_timeout = 300;
+  uint32_t uart1_timeout = 1000;
   HAL_StatusTypeDef status = HAL_ERROR;
   if (default_config) // check if camera is already configured
   {
@@ -338,7 +355,7 @@ HAL_StatusTypeDef camera_init(uint8_t default_config)
     status = HAL_UART_Receive(&huart1, &received, 1, uart1_timeout);
     CHECK_HAL_STATUS_OR_PRINT(status);
 
-    //already configured nothing to do (setup is already done on camera)
+    // already configured nothing to do (setup is already done on camera)
     if (received == 0x04)
       return HAL_OK;
     else
@@ -360,16 +377,22 @@ HAL_StatusTypeDef camera_init(uint8_t default_config)
         return HAL_ERROR;
     }
   }
+  /**
+   * Not default config
+   */
   to_transmit[0] = 0xA1;
   status = HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
   CHECK_HAL_STATUS_OR_PRINT(status);
 
   HAL_Delay(1000);
   to_transmit[0] = 0xAA;
-  status = HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
-  CHECK_HAL_STATUS_OR_PRINT(status);
-  status = HAL_UART_Receive(&huart1, &received, 1, uart1_timeout);
-  CHECK_HAL_STATUS_OR_PRINT(status);
+  while (status != HAL_OK)
+  {
+    status = HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
+    CHECK_HAL_STATUS_OR_PRINT(status);
+    status = HAL_UART_Receive(&huart1, &received, 1, uart1_timeout);
+    CHECK_HAL_STATUS_OR_PRINT(status);
+  }
 
   if (status != HAL_OK)
   {
@@ -437,12 +460,15 @@ HAL_StatusTypeDef camera_init(uint8_t default_config)
     while (1)
       ;
   }
-
   to_transmit[0] = 0xAA;
-  status = HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
-  CHECK_HAL_STATUS_OR_PRINT(status);
-  status = HAL_UART_Receive(&huart1, &received, 1, uart1_timeout);
-  CHECK_HAL_STATUS_OR_PRINT(status);
+  while (status != HAL_OK || received == 0x00)
+  {
+    status = HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
+    CHECK_HAL_STATUS_OR_PRINT(status);
+    status = HAL_UART_Receive(&huart1, &received, 1, uart1_timeout);
+    CHECK_HAL_STATUS_OR_PRINT(status);
+    printf("received:0x%02X\r\n", received);
+  }
   if (status != HAL_OK)
   {
     printf("ACK end config receive error:0x%02X\r\n", status);

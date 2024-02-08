@@ -29,10 +29,9 @@ struct serial_camera_config_t {
   byte jpg_quality;
   framesize_t frame_size;
 };
-serial_camera_config_t camera_config = {.brightness = 0, .special_effect = 0, .jpg_quality = 30, .frame_size = FRAMESIZE_UXGA};
+serial_camera_config_t camera_config = {.brightness = 0, .special_effect = 2, .jpg_quality = 20, .frame_size = FRAMESIZE_SVGA};
 
-uint16_t fb_size = 0;
-bool picture_ready = false;
+uint16_t fb_size = 0; 
 
 bool serial_init_done = false;
 bool setup_done = false;

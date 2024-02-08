@@ -1,5 +1,7 @@
 # ESPCAM Serial
 
+Transfer will break if more than uint16_t (65355) byte are in the current jpeg
+
 ## Commands
 
 | Hex  | Nargs | Description        | Description Args                        |
