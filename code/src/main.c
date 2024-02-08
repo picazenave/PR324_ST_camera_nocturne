@@ -63,28 +63,45 @@ void SystemClock_Config(void);
 
 /* USER CODE END 0 */
 
-int night_detect()
+int seed_light()
 {
-  int light_sensor = 0;  
-  int night_state = 0;
+  int light_sensor;  
+  int night_state;
+  char str[50]; 
     
   HAL_ADC_Start(&hadc1); //deplacer
  
   //Get value
   light_sensor = (int)HAL_ADC_GetValue(&hadc1);
-  // = (int)(4095 - light_sensor)*10000/light_sensor;
+  char str6[15]; 
+  sprintf(str6, "Lumionsité : %d\n", light_sensor);
+	HAL_UART_Transmit_IT(&huart2,(uint8_t*)str6,strlen(str6));
+  HAL_Delay(100);
   if (light_sensor<700)
   {
     night_state = 1;
+    sprintf(str, "C'est la nuit.\n"); 
+		HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
+    HAL_Delay(1000);
   }
-  else
+  else if((light_sensor > 700) &&(light_sensor < 1700))
+  {
+    night_state = 2;
+    sprintf(str, "C'est le crépuscule.\n"); 
+		HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
+    HAL_Delay(1000);
+  }
+  else if (light_sensor > 1700)
   {
     night_state = 0;
+    sprintf(str, "C'est le jour.\n"); 
+		HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
+    HAL_Delay(1000);
   }
   return night_state;
 }
 
-int pir_detection()
+int seed_pir()
 {
   int movment_detected = 0;
   if(HAL_GPIO_ReadPin(GPIO_PIR_GPIO_Port, GPIO_PIR_Pin) == 1)
@@ -125,7 +142,7 @@ void bus_Scanning()
   /*--[ Scanning Done ]--*/
 }
 
-uint8_t pir_ONSEMI()
+uint8_t onsemi_pir()
 {
   // Lecture de la valeur du registre à partir du PCA9655E
   uint8_t Value;
@@ -202,7 +219,6 @@ int main(void)
   char str3[15];
 
   int night_state;
-  char str[50]; 
   /////////////////////////Configuration des registre PIR detection ONSEMI PIR-GEVB////////////////////////////
   uint8_t config_register_data[1] = {0xFE}; // Met IO0_0 (xLED_EN) en sortie, les autres en entrée  //dans registre 6 0b00000110 //pour FE 0b11111110
   HAL_I2C_Mem_Write(&hi2c1, 0x24, 0x06, 1, &config_register_data, 1, HAL_MAX_DELAY);
@@ -211,8 +227,8 @@ int main(void)
 
   while (1)
   {
-    /////////////////////////////////////////PIR detection 101020353/////////////////////////////////////////
-    /*pir_movment = pir_detection();
+    /////////////////////////////////////////PIR detection 101020353 Seed/////////////////////////////////////////
+    /*pir_movment = seed_pir();
     //affichage   
     sprintf(str2, "detection flag : %d\n", pir_movment);
 		HAL_UART_Transmit_IT(&huart2,(uint8_t*)str2,strlen(str2));
@@ -220,7 +236,7 @@ int main(void)
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////PIR detection ONSEMI PIR-GEVB/////////////////////////////////// 
-    pir2 = pir_ONSEMI();
+    /*pir2 = onsemi_pir();
     //affichage 
     if (pir2 == 0)
     {
@@ -233,26 +249,12 @@ int main(void)
       sprintf(str3, "PIR2 : 1, %d\n", pir2);
 		  HAL_UART_Transmit_IT(&huart2,(uint8_t*)str3,strlen(str3));
       HAL_Delay(100);
-    }
+    }*/
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /////////////////////////////////////////Light detection 101020132///////////////////////////////////////
+    /////////////////////////////////////////Light detection 101020132 Seed///////////////////////////////////////
     //init
-    /*night_state = night_detect();
-    //affichage 
-
-    if(night_state == 1)
-    {
-      sprintf(str, "Il fait nuit.\n"); 
-		  HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
-      HAL_Delay(1000);
-    }
-    else if (night_state==0)
-    {
-      sprintf(str, "Il fait jour.\n"); 
-		  HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
-      HAL_Delay(1000);
-    }*/
+    night_state = seed_light();
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     
 
