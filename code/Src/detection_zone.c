@@ -7,17 +7,13 @@
 // Converte the ranging sensor to a matrix 8x8
 static void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint32_t matrix8x8[8][8]) {
 
-    for (int j = 0; j < 64; j += 8)
-    {
-        for (int k = (8 - 1); k >= 0; k--)
-        {
-            for (int i = 0; i < 8; ++i) {
-                for (int ii = 0; ii < 8; ++ii) {
-                    matrix8x8[i][ii] = pResult->ZoneResult[j + k].Distance[0];
-                }
-            }
+    int k = 0;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            matrix8x8[i][j] = pResult->ZoneResult[k++].Distance[0];
         }
     }
+
 
 }
 
@@ -68,6 +64,7 @@ static void print_counters(DetectionZone* obj) {
     for (int i = 0; i < 5; ++i) {
         printf("Counter %d: %d\r\n", i + 1, obj->counters[i]);
     }
+    printf("\r\n");
 }
 
 // Compare 2 matrix with the counters table of 2 Detection Zone (n-1 and n)
@@ -111,6 +108,8 @@ int check(DetectionZone* obj, RANGING_SENSOR_Result_t *pResult){
     {
         // Initialization, so no check and just register
 
+        printf("Initialization\r\n");
+
         uint32_t new_matrix8x8[8][8];
         obj->sensor2matrix(pResult, new_matrix8x8);
         for (int i = 0; i < 8; i++) {
@@ -119,11 +118,15 @@ int check(DetectionZone* obj, RANGING_SENSOR_Result_t *pResult){
             }
         }
 
+        print_matrix8x8(obj->matrix8x8);
+
         return INITIALIZATION;
     }
     else
     {
         // Check the evolution of the matrix
+
+        printf("Check the evolution\r\n");
 
         uint32_t new_matrix8x8[8][8];
         obj->sensor2matrix(pResult, new_matrix8x8);

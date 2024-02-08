@@ -239,10 +239,14 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
 
       DetectionZone* obj = create();
       uint32_t matrix8x8[8][8];
-      obj->sensor2matrix(&Result, matrix8x8); 
-      obj->print_matrix8x8(matrix8x8);
+      // obj->sensor2matrix(&Result, matrix8x8); 
+      // obj->print_matrix8x8(matrix8x8);
 
-      while(1);
+      check(obj, &Result);
+
+      destroy(obj);
+
+      HAL_Delay(5000);
 
       // detection_animal(&Result);
     }
