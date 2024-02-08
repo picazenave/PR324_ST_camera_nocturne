@@ -69,14 +69,6 @@ void i2c_scanner();
 /* Private defines -----------------------------------------------------------*/
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
-#define D0_Pin GPIO_PIN_0
-#define D0_GPIO_Port GPIOC
-#define D1_Pin GPIO_PIN_1
-#define D1_GPIO_Port GPIOC
-#define D2_Pin GPIO_PIN_2
-#define D2_GPIO_Port GPIOC
-#define D3_Pin GPIO_PIN_3
-#define D3_GPIO_Port GPIOC
 #define ADC1_IN1_LUM_Pin GPIO_PIN_1
 #define ADC1_IN1_LUM_GPIO_Port GPIOA
 #define USART_TX_Pin GPIO_PIN_2
@@ -85,14 +77,12 @@ void i2c_scanner();
 #define USART_RX_GPIO_Port GPIOA
 #define TOF_INT_Pin GPIO_PIN_4
 #define TOF_INT_GPIO_Port GPIOA
-#define D4_Pin GPIO_PIN_4
-#define D4_GPIO_Port GPIOC
-#define D5_Pin GPIO_PIN_5
-#define D5_GPIO_Port GPIOC
 #define TOF_PWR_EN_Pin GPIO_PIN_0
 #define TOF_PWR_EN_GPIO_Port GPIOB
 #define GPIO_PIR_Pin GPIO_PIN_1
 #define GPIO_PIR_GPIO_Port GPIOB
+#define CAMERA_RST_N_Pin GPIO_PIN_7
+#define CAMERA_RST_N_GPIO_Port GPIOC
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
@@ -103,10 +93,6 @@ void i2c_scanner();
 #define TOF_LPn_C_GPIO_Port GPIOB
 #define SD_CS_Pin GPIO_PIN_5
 #define SD_CS_GPIO_Port GPIOB
-#define CAMERA_CS_Pin GPIO_PIN_6
-#define CAMERA_CS_GPIO_Port GPIOB
-#define CAMERA_SHUTTER_Pin GPIO_PIN_7
-#define CAMERA_SHUTTER_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define SD_SPI_HANDLE hspi1
