@@ -62,7 +62,8 @@ struct sensor_reg {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+HAL_StatusTypeDef camera_init(uint8_t default_config);
+void i2c_scanner();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

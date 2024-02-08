@@ -29,10 +29,9 @@ struct serial_camera_config_t {
   byte jpg_quality;
   framesize_t frame_size;
 };
-serial_camera_config_t camera_config = {.brightness = 0, .special_effect = 0, .jpg_quality = 30, .frame_size = FRAMESIZE_VGA};
+serial_camera_config_t camera_config = {.brightness = 0, .special_effect = 0, .jpg_quality = 30, .frame_size = FRAMESIZE_UXGA};
 
 uint16_t fb_size = 0;
-camera_fb_t * fb = NULL;
 bool picture_ready = false;
 
 bool serial_init_done = false;
@@ -71,8 +70,8 @@ void setup() {
 
   config.frame_size = camera_config.frame_size;
   config.jpeg_quality = camera_config.jpg_quality;
-  config.fb_count = 1;
-
+  config.fb_count = 3;
+  config.grab_mode = CAMERA_GRAB_LATEST;
   // Init Camera
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
@@ -84,6 +83,9 @@ void setup() {
   sensor_t * s = esp_camera_sensor_get();
   s->set_brightness(s, camera_config.brightness);
   s->set_special_effect(s, camera_config.special_effect);
+  s->set_whitebal(s, 1);       // 0 = disable , 1 = enable
+  s->set_awb_gain(s, 1);       // 0 = disable , 1 = enable
+  s->set_wb_mode(s, 0);        // 0 to 4 - if awb_gain enabled (0 - Auto, 1 - Sunny, 2 - Cloudy, 3 - Office, 4 - Home)
 
   setup_done = true;
 }
@@ -101,14 +103,16 @@ char wait_for_serial()
   return r;
 }
 
+
 void dispatch_serial_command()
 {
+  camera_fb_t * fb = NULL;
   char r = wait_for_serial();
   char temp = 0;
   switch (r)
   {
     case 0xAA : //ACK
-      temp=(setup_done+serial_init_done<<1);
+      temp = (setup_done + serial_init_done << 1);
       Serial.write(temp);
       break;
     case 0xA1 : // start config
@@ -133,11 +137,12 @@ void dispatch_serial_command()
       serial_init_done = true;
       break;
     case 0x55 : //get jpg
-      fb = NULL;
       fb = esp_camera_fb_get();
+      
       fb_size = fb->len;
       Serial.write(uint8_t(fb_size >> 8));
       Serial.write(uint8_t(fb_size & 0xFF));
+      while (wait_for_serial() != 0x55);
       for (unsigned int i = 0; i < fb->len; i++)
       {
         Serial.write(fb->buf[i]);
