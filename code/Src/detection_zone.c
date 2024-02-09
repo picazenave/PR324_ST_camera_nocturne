@@ -20,10 +20,11 @@ void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, Det
 void print_matrix_distance(DetectionZone_t* detect) {
     printf("Printing 8x8 matrix:\r\n");
     for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
-        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
-            printf("%8lu ", detect->matrix_distance[j + k]);
-        }
         printf("\r\n");
+        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+            printf("| %4lu ", detect->matrix_distance[j + k]);
+        }
+        printf("|\r\n");
     }
 }
 
@@ -35,8 +36,8 @@ void print_2_matrix_distance(DetectionZone_t* detect1, DetectionZone_t* detect2)
         printf("Printing 8x8 matrix:\r\n");
         for (int j = 0; j < detect1->number_of_zones; j += detect1->zones_per_line) {
             for (int k = (detect1->zones_per_line - 1); k >= 0; k--) {
-                printf("| %8lu ", detect1->matrix_distance[j + k]);
-                printf("// %8lu | ", detect2->matrix_distance[j + k]);
+                printf("| %4lu ", detect1->matrix_distance[j + k]);
+                printf("// %4lu | ", detect2->matrix_distance[j + k]);
             }
             printf("\r\n");
         }
@@ -90,6 +91,24 @@ void print_counters(int counters[5]) {
     printf("\r\n");
 }
 
+// Initialization of the first matrix (the environment matrix)
+void init_environment_matix(DetectionZone_t* detect, uint32_t environment_matix[64]) {
+    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
+        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+            environment_matix[j + k] = detect->matrix_distance[j + k];
+        }
+    }
+    
+    printf("Environment matrix:\r\n");
+    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
+        printf("\r\n");
+        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+            printf("| %4lu ", environment_matix[j + k]);
+        }
+        printf("|\r\n");
+    }
+}
+
 // Compare 2 matrix with the counters table of 2 Detection Zone (n-1 and n)
 int compare(DetectionZone_t* detect, DetectionZone_t* new_detect, int comparaison[5]){
     calcul_counters(detect);
@@ -139,6 +158,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         print_matrix_distance(detect);
         calcul_counters(detect);
 
+        init_environment_matix(detect, environment_matix);
+
         return INITIALIZATION;
     }
     else
@@ -163,7 +184,45 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
     }
 }
 
+// Convert a distance matrix a evolution 
+void distance2evolution(DetectionZone_t* detect, DetectionZone_t* new_detect) {
+    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
+        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
 
+
+            //  Trop proche
+          if (  new_detect->matrix_distance[j + k] < TOO_CLOSE &&
+              ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matix[j+k] ||
+                new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matix[j+k] ))
+          {
+            // nombre_zone++;
+            printf("| " RED "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
+          }
+          // bonne zone (donc regarder l'évolution)
+          else if (  new_detect->matrix_distance[j + k] < RANGE_MAX &&
+                   ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matix[j+k] ||
+                     new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matix[j+k] ))
+          {
+            // -------- nombre_zone++;
+            printf("| " GREEN "%5ld" RESET  " ", (long)new_detect->matrix_distance[j + k]);
+          }
+          // Trop loin
+          else if ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matix[j+k] ||
+                    new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matix[j+k] )
+          {
+            printf("| " YELLOW "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
+          }
+          // Stable
+          else
+          {
+            printf("| " WHITE "%5ld" RESET  " ", (long)new_detect->matrix_distance[j + k]);
+          }
+        }
+    }
+}
+
+
+// Copy the DetectionZone_t structure "new_detect" in the DetectionZone_t structure "detect"
 void copy_detection_zone(DetectionZone_t* detect, DetectionZone_t* new_detect) {
     detect->zones_per_line = new_detect->zones_per_line;
     detect->number_of_zones = new_detect->zones_per_line;
