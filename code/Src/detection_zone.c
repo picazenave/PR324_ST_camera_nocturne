@@ -7,24 +7,21 @@
 // Converte the ranging sensor to a matrix 8x8
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect) {
     detect->zones_per_line = zones_per_line;
-    printf("zone per line %8u \r\n", zones_per_line);
-    for (int j = 0; j < pResult->NumberOfZones; j += 8) {
-        for (int k = (8 - 1); k >= 0; k--) {
-            detect->matrix8x8[j + k] = pResult->ZoneResult[j + k].Distance[0];
-            printf("%8lu ", detect->matrix8x8[j + k]);
+    detect->number_of_zones = pResult->NumberOfZones;
+    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
+        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+            detect->matrix_distance[j + k] = pResult->ZoneResult[j + k].Distance[0];
         }
-        printf("\r\n");
     }
-
-    print_matrix8x8(detect);
+    // print_matrix_distance(detect);
 }
 
 // Print the matrix 8<8
-void print_matrix8x8(DetectionZone_t* detect) {
+void print_matrix_distance(DetectionZone_t* detect) {
     printf("Printing 8x8 matrix:\r\n");
-    for (int j = 0; j < 64; j += 8) {
-        for (int k = (8 - 1); k >= 0; k--) {
-            printf("%8lu ", detect->matrix8x8[j + k]);
+    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
+        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+            printf("%8lu ", detect->matrix_distance[j + k]);
         }
         printf("\r\n");
     }
@@ -37,8 +34,8 @@ void matrix_pattern(DetectionZone_t* detect) {
         for (int j = 0; j < 8; ++j) {
             int min = i < j ? i : j;
             int max = i < j ? j : i;
-            // detect->matrix8x8[i * 8 + j] = (min < 8 - max) ? min + 1 : 8 - max;
-            detect->matrix8x8[i * 8 + j] = 1;
+            detect->matrix_distance[i * 8 + j] = (min < 8 - max) ? min + 1 : 8 - max;
+            // detect->matrix_distance[i * 8 + j] = 1;
         }
     }
 }
@@ -53,7 +50,7 @@ void calcul_counters(DetectionZone_t* detect) {
     // Compter les valeurs de la matrice
     for (int i = 0; i < 64; i++)
     {
-        int value = detect->matrix8x8[i];
+        int value = detect->matrix_distance[i];
         int zone_value = matrice_zones[i];
         detect->counters[zone_value-1] += value;
         detect->counters[4] += value; 

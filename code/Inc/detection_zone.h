@@ -13,8 +13,8 @@
 // Structure pour DetectionZone
 typedef struct
 {
-    uint32_t matrix8x8[64];
-    uint32_t NumberOfZones;
+    uint32_t matrix_distance[64];
+    uint32_t number_of_zones;
     uint8_t zones_per_line;
     int counters[5];
 } DetectionZone_t;
@@ -31,7 +31,7 @@ static uint32_t matrice_zones[64] = {
     };
 
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect);
-void print_matrix8x8(DetectionZone_t* detect);
+void print_matrix_distance(DetectionZone_t* detect);
 void matrix_pattern(DetectionZone_t* detect);
 void calcul_counters(DetectionZone_t* detect);
 void print_counters(int counters[5]);

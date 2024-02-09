@@ -246,7 +246,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
       print_result(&Result);
       
       sensor2matrix(&Result, zones_per_line, &detect);
-      print_matrix8x8(&detect);
+      print_matrix_distance(&detect);
       calcul_counters(&detect);
 
       // check(detect, &Result);
