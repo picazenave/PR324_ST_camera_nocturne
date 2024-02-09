@@ -16,7 +16,7 @@ void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, Det
     // print_matrix_distance(detect);
 }
 
-// Print the matrix 8<8
+// Print the matrix 8x8
 void print_matrix_distance(DetectionZone_t* detect) {
     printf("Printing 8x8 matrix:\r\n");
     for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
@@ -27,6 +27,7 @@ void print_matrix_distance(DetectionZone_t* detect) {
     }
 }
 
+// Print 2 matrix 8x8
 void print_2_matrix_distance(DetectionZone_t* detect1, DetectionZone_t* detect2) {
     if ( (detect1->zones_per_line == detect2->zones_per_line) &&
         (detect1->number_of_zones == detect2->zones_per_line) )
