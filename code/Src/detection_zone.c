@@ -27,6 +27,27 @@ void print_matrix_distance(DetectionZone_t* detect) {
     }
 }
 
+void print_2_matrix_distance(DetectionZone_t* detect1, DetectionZone_t* detect2) {
+    if ( (detect1->zones_per_line == detect2->zones_per_line) &&
+        (detect1->number_of_zones == detect2->zones_per_line) )
+    {
+        printf("Printing 8x8 matrix:\r\n");
+        for (int j = 0; j < detect1->number_of_zones; j += detect1->zones_per_line) {
+            for (int k = (detect1->zones_per_line - 1); k >= 0; k--) {
+                printf("| %8lu ", detect1->matrix_distance[j + k]);
+                printf("// %8lu | ", detect2->matrix_distance[j + k]);
+            }
+            printf("\r\n");
+        }
+    }
+    else
+    {
+        printf("Size of the two matrix are not the same\r\n");
+    }
+    
+    
+}
+
 // Write the pattern on the matrix 8x8
 void matrix_pattern(DetectionZone_t* detect) {
     // // Fill the matrix with the specified pattern
@@ -56,7 +77,7 @@ void calcul_counters(DetectionZone_t* detect) {
         detect->counters[4] += value; 
     }
 
-    print_counters(detect->counters);
+    // print_counters(detect->counters);
 }
 
 // Print the counter table
@@ -72,6 +93,8 @@ void print_counters(int counters[5]) {
 int compare(DetectionZone_t* detect, DetectionZone_t* new_detect, int comparaison[5]){
     calcul_counters(detect);
     calcul_counters(new_detect);
+
+    print_2_matrix_distance(detect, new_detect);
     
     for (int i = 0; i < 5; ++i) {
         int value = new_detect->counters[i] - detect->counters[i];
@@ -104,15 +127,16 @@ int compare(DetectionZone_t* detect, DetectionZone_t* new_detect, int comparaiso
 }
 
 // Check the comparaison and return a status
-int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult){
+int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
     if (detect->counters[4] == 0)
     {
         // Initialization, so no check and just register
 
         printf("Initialization\r\n");
 
-        // sensor2matrix(pResult, detect);
-        // print_matrix8x8(detect->matrix8x8);
+        sensor2matrix(pResult, zones_per_line, detect);
+        print_matrix_distance(detect);
+        calcul_counters(detect);
 
         return INITIALIZATION;
     }
@@ -122,16 +146,16 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult){
 
         printf("Check the evolution\r\n");
 
-        DetectionZone_t* new_detect;
+        DetectionZone_t new_detect;
 
-        // sensor2matrix(pResult, new_detect);
+        sensor2matrix(pResult, zones_per_line, &new_detect);
 
         int comparaison[5];
-        int status = compare(detect, new_detect, comparaison);
+        int status = compare(detect, &new_detect, comparaison);
 
         if (status != DECREASE)
         {
-            detect = new_detect;
+            copy_detection_zone(detect, &new_detect);
         }
         
         return status;
@@ -139,7 +163,22 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult){
 }
 
 
+void copy_detection_zone(DetectionZone_t* detect, DetectionZone_t* new_detect) {
+    detect->zones_per_line = new_detect->zones_per_line;
+    detect->number_of_zones = new_detect->zones_per_line;
 
+    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
+        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+            detect->matrix_distance[j + k] = new_detect->matrix_distance[j + k];
+        }
+    }
+
+    calcul_counters(detect);
+
+    printf("New calcul counters\r\n");
+    print_counters(detect);
+
+}
 
 
 // int main() {
