@@ -30,6 +30,8 @@ extern "C" {
 #include "custom_ranging_sensor.h"
 #include "stm32f4xx_nucleo.h"
 
+#include "detection_zone.h"
+
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
@@ -92,6 +94,10 @@ static void display_commands_banner(void);
 static void handle_cmd(uint8_t cmd);
 static uint8_t get_key(void);
 static uint32_t com_has_data(void);
+
+
+DetectionZone_t detect;
+
 
 void MX_TOF_Init(void)
 {
@@ -219,7 +225,10 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
   CUSTOM_RANGING_SENSOR_ReadID(CUSTOM_VL53L5CX, &Id);
   CUSTOM_RANGING_SENSOR_GetCapabilities(CUSTOM_VL53L5CX, &Cap);
 
+<<<<<<< HEAD
   // Profile.RangingProfile = RS_PROFILE_4x4_CONTINUOUS;
+=======
+>>>>>>> 61dd58736fd62542a53bc637dae02fca018b381b
   Profile.RangingProfile = RS_PROFILE_8x8_CONTINUOUS;
   Profile.TimingBudget = TIMING_BUDGET;
   Profile.Frequency = RANGING_FREQUENCY; /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
@@ -238,9 +247,23 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
 
     if (status == BSP_ERROR_NONE)
     {
+
+      uint8_t zones_per_line = ((Profile.RangingProfile == RS_PROFILE_8x8_AUTONOMOUS) ||
+                    (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
+      
       print_result(&Result);
-      detection_animal(&Result);
+      
+      // sensor2matrix(&Result, zones_per_line, &detect);
+      // print_matrix_distance(&detect);
+      // calcul_counters(&detect);
+
+      check(&detect, &Result, zones_per_line);
+
+      HAL_Delay(5000);
+
+      // detection_animal(&Result);
     }
+
 
     if (com_has_data())
     {
@@ -252,6 +275,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
     printf("compteur = %ld", compteur);
     // while(compteur == 2);
   }
+  
 }
 #endif /* USE_BARE_DRIVER */
 
@@ -333,6 +357,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
   zones_per_line = ((Profile.RangingProfile == RS_PROFILE_8x8_AUTONOMOUS) ||
                     (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
 
+<<<<<<< HEAD
   static long init_value[64];
   // for (size_t i = 0; i < 64; i++)
   // {
@@ -340,6 +365,9 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
   // }
 
   display_commands_banner();
+=======
+  // display_commands_banner();
+>>>>>>> 61dd58736fd62542a53bc637dae02fca018b381b
 
   printf("Cell Format :\r\n\r\n");
   for (l = 0; l < RANGING_SENSOR_NB_TARGET_PER_ZONE; l++)

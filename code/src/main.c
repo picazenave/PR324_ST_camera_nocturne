@@ -20,6 +20,14 @@
 #include "main.h"
 #include "app_tof.h"
 
+#include <stdio.h>
+// #include "detection_zone.h"
+
+// #include "i2c.h"
+// #include "spi.h"
+// #include "usart.h"
+// #include "gpio.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -67,8 +75,6 @@ static void MX_RTC_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  long distance_value[64];
-  uint8_t indice = 0;
 
   /* USER CODE END 1 */
 
@@ -90,8 +96,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  // MX_USART2_UART_Init();
+
   MX_RTC_Init();
   MX_TOF_Init();
+
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -101,7 +110,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    
+
     MX_TOF_Process();
     
 
