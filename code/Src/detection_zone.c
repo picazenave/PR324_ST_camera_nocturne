@@ -158,7 +158,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         print_matrix_distance(detect);
         calcul_counters(detect);
 
-        init_environment_matix(detect, environment_matix);
+        init_environment_matrix(detect, environment_matix);
 
         return INITIALIZATION;
     }
@@ -168,26 +168,31 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
         printf("Check the evolution\r\n");
 
-        DetectionZone_t new_detect;
+        distance2evolution(detect);
 
-        sensor2matrix(pResult, zones_per_line, &new_detect);
 
-        int comparaison[5];
-        int status = compare(detect, &new_detect, comparaison);
+        // DetectionZone_t new_detect;
 
-        if (status != DECREASE)
-        {
-            copy_detection_zone(detect, &new_detect);
-        }
+        // sensor2matrix(pResult, zones_per_line, &new_detect);
+
+        // int comparaison[5];
+        // int status = compare(detect, &new_detect, comparaison);
+
+        // if (status != DECREASE)
+        // {
+        //     copy_detection_zone(detect, &new_detect);
+        // }
         
-        return status;
+        // return status;
+
+        return 1;
     }
 }
 
 // Convert a distance matrix a evolution 
-void distance2evolution(DetectionZone_t* detect, DetectionZone_t* new_detect) {
-    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
-        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+void distance2evolution(DetectionZone_t* new_detect) {
+    for (int j = 0; j < new_detect->number_of_zones; j += new_detect->zones_per_line) {
+        for (int k = (new_detect->zones_per_line - 1); k >= 0; k--) {
 
 
             //  Trop proche
@@ -236,7 +241,7 @@ void copy_detection_zone(DetectionZone_t* detect, DetectionZone_t* new_detect) {
     calcul_counters(detect);
 
     printf("New calcul counters\r\n");
-    print_counters(detect);
+    print_counters(detect->counters);
 
 }
 

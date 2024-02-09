@@ -248,7 +248,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
       uint8_t zones_per_line = ((Profile.RangingProfile == RS_PROFILE_8x8_AUTONOMOUS) ||
                                 (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
       
-      print_result(&Result);
+      // print_result(&Result);
       
       // sensor2matrix(&Result, zones_per_line, &detect);
       // print_matrix_distance(&detect);
@@ -269,7 +269,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
 
     HAL_Delay(POLLING_PERIOD);
     compteur++;
-    printf("compteur = %ld", compteur);
+    printf("compteur = %ld\r\n", compteur);
     // while(compteur == 2);
   }
   
@@ -340,6 +340,7 @@ static void detection_animal(RANGING_SENSOR_Result_t *Result)
 
   printf("Nombre de zone entre %d et %d : %d/%ld\r\n", TOO_CLOSE, RANGE_MAX, nombre_zone, Result->NumberOfZones);
 }
+
 
 static void print_result(RANGING_SENSOR_Result_t *Result)
 {
@@ -501,6 +502,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
 
   printf("Nombre de zone entre %d et %d : %d/%ld\r\n", TOO_CLOSE, RANGE_MAX, nombre_zone, Result->NumberOfZones);
 }
+
 
 static void toggle_resolution(void)
 {
