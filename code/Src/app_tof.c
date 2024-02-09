@@ -43,7 +43,7 @@ extern "C" {
 #define NB_SEUIL_ZONE     (4U) /* Nombre de zone à dépasser pour affirmer une présence */
 #define TOO_CLOSE         (300U) /* Distance minimale en mm pour ne pas avoir un cible trop proche */
 #define RANGE_MAX         (1000U) /* Distance maximale en mm pour ne pas avoir un cible trop éloignée */
-#define SEUIL_BRUIT       (5U) /* Le capteur détecte des distances différentes en étant immobile, on rajoute un seuil en % */
+#define SEUIL_BRUIT       (3U) /* Le capteur détecte des distances différentes en étant immobile, on rajoute un seuil en % */
 #define SEUIL_BRUIT_PLUS  (1.f + (float)SEUIL_BRUIT/100.f)
 #define SEUIL_BRUIT_MOINS (1.f - (float)SEUIL_BRUIT/100.f)
 
@@ -343,7 +343,7 @@ static void detection_animal(RANGING_SENSOR_Result_t *Result)
 
 static void print_result(RANGING_SENSOR_Result_t *Result)
 {
-  // uint8_t nombre_zone = 0;
+  uint8_t nombre_zone = 0;
   static uint8_t is_first_init = 1;
   int8_t i;
   int8_t j;
@@ -371,10 +371,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
       printf(" %20s : %20s\r\n", "Signal [kcps/spad]", "Ambient [kcps/spad]");
     }
   }
-
   printf("\r\n\r\n");
-
-  // nombre_zone = 0;
 
   for (j = 0; j < Result->NumberOfZones; j += zones_per_line)
   {
@@ -397,7 +394,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
       {
         if (Result->ZoneResult[j + k].NumberOfTargets > 0)
         {
-          if(is_first_init) // 1 minute
+          if(is_first_init) 
           {
             init_value[j+k] = (long)Result->ZoneResult[j + k].Distance[l];
             compteur = 0;
@@ -406,39 +403,31 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
               ( (long)Result->ZoneResult[j + k].Distance[l] > SEUIL_BRUIT_PLUS  * init_value[j+k] ||
                 (long)Result->ZoneResult[j + k].Distance[l] < SEUIL_BRUIT_MOINS * init_value[j+k] ))
           {
-            // nombre_zone++;
-            // printf("| \033[38;5;9m%5ld\033[0m  :  %5ld ",
             printf("| " RED "%5ld" RESET "  :  %5ld ",
                    (long)Result->ZoneResult[j + k].Distance[l],
                    (long)Result->ZoneResult[j + k].Status[l]);
-                  //  j+k);
           }
           else if (  (long)Result->ZoneResult[j + k].Distance[l] < RANGE_MAX &&
                    ( (long)Result->ZoneResult[j + k].Distance[l] > SEUIL_BRUIT_PLUS  * init_value[j+k] ||
                      (long)Result->ZoneResult[j + k].Distance[l] < SEUIL_BRUIT_MOINS * init_value[j+k] ))
           {
-            // nombre_zone++;
-            // printf("| \033[38;5;10m%5ld\033[0m  :  %5ld ",
+            nombre_zone++;
             printf("| " GREEN "%5ld" RESET "  :  %5ld ",
                    (long)Result->ZoneResult[j + k].Distance[l],
                    (long)Result->ZoneResult[j + k].Status[l]);
-                  //  j+k);
           }
           else if ( (long)Result->ZoneResult[j + k].Distance[l] > SEUIL_BRUIT_PLUS  * init_value[j+k] ||
                     (long)Result->ZoneResult[j + k].Distance[l] < SEUIL_BRUIT_MOINS * init_value[j+k] )
           {
-            // printf("| \033[38;5;3m%5ld\033[0m  :  %5ld ",
             printf("| " YELLOW "%5ld" RESET "  :  %5ld ",
                    (long)Result->ZoneResult[j + k].Distance[l],
                    (long)Result->ZoneResult[j + k].Status[l]);
-                  //  j+k);
           }
           else
           {
             printf("| " WHITE "%5ld" RESET "  :  %5ld ",
                    (long)Result->ZoneResult[j + k].Distance[l],
                    (long)Result->ZoneResult[j + k].Status[l]);
-                  //  j+k);
           }
         }
         else
@@ -496,6 +485,8 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
   // }  
 
   is_first_init = 0; // init juste une fois
+  
+  printf("Nombre de zone entre %d et %d : %d/%ld\r\n", TOO_CLOSE, RANGE_MAX, nombre_zone, Result->NumberOfZones);
 }
 
 static void toggle_resolution(void)
