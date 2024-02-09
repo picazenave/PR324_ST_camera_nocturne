@@ -225,10 +225,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
   CUSTOM_RANGING_SENSOR_ReadID(CUSTOM_VL53L5CX, &Id);
   CUSTOM_RANGING_SENSOR_GetCapabilities(CUSTOM_VL53L5CX, &Cap);
 
-<<<<<<< HEAD
   // Profile.RangingProfile = RS_PROFILE_4x4_CONTINUOUS;
-=======
->>>>>>> 61dd58736fd62542a53bc637dae02fca018b381b
   Profile.RangingProfile = RS_PROFILE_8x8_CONTINUOUS;
   Profile.TimingBudget = TIMING_BUDGET;
   Profile.Frequency = RANGING_FREQUENCY; /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
@@ -249,7 +246,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
     {
 
       uint8_t zones_per_line = ((Profile.RangingProfile == RS_PROFILE_8x8_AUTONOMOUS) ||
-                    (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
+                                (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
       
       print_result(&Result);
       
@@ -257,9 +254,9 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
       // print_matrix_distance(&detect);
       // calcul_counters(&detect);
 
-      check(&detect, &Result, zones_per_line);
+      // check(&detect, &Result, zones_per_line);
 
-      HAL_Delay(5000);
+      HAL_Delay(POLLING_PERIOD);
 
       // detection_animal(&Result);
     }
@@ -357,7 +354,6 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
   zones_per_line = ((Profile.RangingProfile == RS_PROFILE_8x8_AUTONOMOUS) ||
                     (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
 
-<<<<<<< HEAD
   static long init_value[64];
   // for (size_t i = 0; i < 64; i++)
   // {
@@ -365,9 +361,6 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
   // }
 
   display_commands_banner();
-=======
-  // display_commands_banner();
->>>>>>> 61dd58736fd62542a53bc637dae02fca018b381b
 
   printf("Cell Format :\r\n\r\n");
   for (l = 0; l < RANGING_SENSOR_NB_TARGET_PER_ZONE; l++)
@@ -557,18 +550,18 @@ static void display_commands_banner(void)
   /* clear screen */
   printf("%c[2H", 27);
 
-  printf("VL53L5CX Simple Ranging demo application\r\n");
-#ifdef USE_BARE_DRIVER
-  printf("Using direct calls to VL53L5CX bare driver API\r\n");
-#endif
-  printf("Polling mode\r\n");
-  printf("----------------------------------------\r\n\n");
+//   printf("VL53L5CX Simple Ranging demo application\r\n");
+// #ifdef USE_BARE_DRIVER
+//   printf("Using direct calls to VL53L5CX bare driver API\r\n");
+// #endif
+//   printf("Polling mode\r\n");
+//   printf("----------------------------------------\r\n\n");
 
-  printf("Use the following keys to control application\r\n");
-  printf(" 'r' : change resolution\r\n");
-  printf(" 's' : enable signal and ambient\r\n");
-  printf(" 'c' : clear screen\r\n");
-  printf("\r\n");
+//   printf("Use the following keys to control application\r\n");
+//   printf(" 'r' : change resolution\r\n");
+//   printf(" 's' : enable signal and ambient\r\n");
+//   printf(" 'c' : clear screen\r\n");
+//   printf("\r\n");
 }
 
 static void handle_cmd(uint8_t cmd)
