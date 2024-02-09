@@ -19,12 +19,25 @@ void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, Det
 // Print the matrix 8x8
 void print_matrix_distance(DetectionZone_t* detect) {
     printf("Printing 8x8 matrix:\r\n");
-    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
-        printf("\r\n");
-        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
-            printf("| %4lu ", detect->matrix_distance[j + k]);
-        }
-        printf("|\r\n");
+    // for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
+    //     printf("\r\n");
+    //     for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+    //         printf("| %4lu ", detect->matrix_distance[j + k]);
+    //     }
+    //     printf("|\r\n");
+    // }
+    print_matrix(detect->matrix_distance);
+}
+
+void print_matrix(uint32_t matrix8x8[64]) {
+    printf("Scores : \r\n");
+    for (u_int8_t j = 0; j < 64; j += 8)
+    {
+      for (u_int8_t k = (8 - 1); k >= 0; k--)
+      {
+        printf("| %4ld (%d) ", matrix8x8[j+k], j+k);
+      }
+      printf("|\r\n");
     }
 }
 
@@ -209,7 +222,7 @@ void distance2evolution(DetectionZone_t* new_detect) {
                      new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matix[j+k] ))
           {
             // -------- nombre_zone++;
-            printf("| " GREEN "%5ld" RESET  " ", (long)new_detect->matrix_distance[j + k]);
+            printf("| " GREEN "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
           }
           // Trop loin
           else if ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matix[j+k] ||
@@ -220,7 +233,7 @@ void distance2evolution(DetectionZone_t* new_detect) {
           // Stable
           else
           {
-            printf("| " WHITE "%5ld" RESET  " ", (long)new_detect->matrix_distance[j + k]);
+            printf("| " WHITE "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
           }
         }
     }

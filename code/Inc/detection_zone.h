@@ -42,9 +42,10 @@ typedef struct
     uint32_t number_of_zones;
     uint8_t zones_per_line;
     int counters[5];
+    uint8_t score[64];
 } DetectionZone_t;
 
-static uint32_t matrice_zones[64] = {
+static uint8_t matrice_zones[64] = {
         1, 1, 1, 1, 1, 1, 1, 1,
         1, 2, 2, 2, 2, 2, 2, 1,
         1, 2, 3, 3, 3, 3, 2, 1,
