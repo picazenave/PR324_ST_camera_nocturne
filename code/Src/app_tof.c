@@ -254,7 +254,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
       // print_matrix_distance(&detect);
       // calcul_counters(&detect);
 
-      // check(&detect, &Result, zones_per_line);
+      check(&detect, &Result, zones_per_line);
 
       HAL_Delay(POLLING_PERIOD);
 
@@ -399,6 +399,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
             init_value[j+k] = (long)Result->ZoneResult[j + k].Distance[l];
             compteur = 0;
           }
+          //  Trop proche
           if (  (long)Result->ZoneResult[j + k].Distance[l] < TOO_CLOSE &&
               ( (long)Result->ZoneResult[j + k].Distance[l] > SEUIL_BRUIT_PLUS  * init_value[j+k] ||
                 (long)Result->ZoneResult[j + k].Distance[l] < SEUIL_BRUIT_MOINS * init_value[j+k] ))
@@ -407,6 +408,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
                    (long)Result->ZoneResult[j + k].Distance[l],
                    (long)Result->ZoneResult[j + k].Status[l]);
           }
+          // bonne zone (donc regarder l'évolution)
           else if (  (long)Result->ZoneResult[j + k].Distance[l] < RANGE_MAX &&
                    ( (long)Result->ZoneResult[j + k].Distance[l] > SEUIL_BRUIT_PLUS  * init_value[j+k] ||
                      (long)Result->ZoneResult[j + k].Distance[l] < SEUIL_BRUIT_MOINS * init_value[j+k] ))
@@ -416,6 +418,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
                    (long)Result->ZoneResult[j + k].Distance[l],
                    (long)Result->ZoneResult[j + k].Status[l]);
           }
+          // Trop loin
           else if ( (long)Result->ZoneResult[j + k].Distance[l] > SEUIL_BRUIT_PLUS  * init_value[j+k] ||
                     (long)Result->ZoneResult[j + k].Distance[l] < SEUIL_BRUIT_MOINS * init_value[j+k] )
           {
@@ -423,6 +426,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
                    (long)Result->ZoneResult[j + k].Distance[l],
                    (long)Result->ZoneResult[j + k].Status[l]);
           }
+          // Stable
           else
           {
             printf("| " WHITE "%5ld" RESET "  :  %5ld ",
@@ -485,7 +489,6 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
   // }  
 
   is_first_init = 0; // init juste une fois
-  
   printf("Nombre de zone entre %d et %d : %d/%ld\r\n", TOO_CLOSE, RANGE_MAX, nombre_zone, Result->NumberOfZones);
 }
 
