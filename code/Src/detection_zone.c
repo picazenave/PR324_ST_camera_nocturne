@@ -159,6 +159,52 @@ int compare(DetectionZone_t* detect, DetectionZone_t* new_detect, int comparaiso
     
 }
 
+// Do the a subtraction : matrix_difference = detect->matrix_distance - detect_n->matrix_distance
+void difference_matrix(DetectionZone_t* c, DetectionZone_t* detect_n, uint32_t matrix_difference[64]) {
+    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
+        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+            matrix_difference[j + k] = detect->matrix_distance[j + k] - detect_n->matrix_distance[j + k];
+        }
+    }
+}
+
+int check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n) {
+    uint32_t matrix_difference[64];
+    difference_matrix(detect, detect_n, matrix_difference);
+
+    printf("Matrice distance:\r\n");
+    print_matrix(matrix_difference);
+
+    int max = matrix_difference[0];
+    int indice_max = 0;
+
+    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
+        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
+            if ( (matrix_difference[j + k] > max) 
+                && (matrix_difference[j + k] > SEUIL_BRUIT_PLUS)
+                && (matrix_difference[j + k] < SEUIL_BRUIT_MOINS) ) {
+                max = matrix_difference[j + k];
+                indice_max = j + k;
+            }
+        }
+    }
+
+    // Affichage du résultat
+    if (indice_max == 0)
+    {
+        printf("No detection\r\n");
+        return -1;
+    }
+    else
+    {
+        printf("Le maximum du tableau est : %d\r\n", max);
+        printf("Son indice est : %d\r\n", indice_max);
+        printf("La distance réelle : %4lu\r\n", detect_n->matrix_distance[indice_max]);
+        return indice_max;
+    }
+}
+
+
 // Check the comparaison and return a status
 int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
     if (detect->counters[4] == 0)
@@ -179,14 +225,20 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
     {
         // Check the evolution of the matrix
 
-        printf("Check the evolution\r\n");
+        printf("Acquisition \r\n");
 
-        distance2evolution(detect);
+        DetectionZone_t detect_n;
+        sensor2matrix(pResult, zones_per_line, &detect_n);
 
+        int find = check_evolution(detect, &detect_n);
 
-        // DetectionZone_t new_detect;
+        if (find != -1)
+        {
+            printf("Follow an animal\r\n");
+        }
+        
 
-        // sensor2matrix(pResult, zones_per_line, &new_detect);
+        // distance2evolution(detect);
 
         // int comparaison[5];
         // int status = compare(detect, &new_detect, comparaison);

@@ -60,12 +60,17 @@ static uint32_t environment_matrix[64];
 
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect);
 void print_matrix_distance(DetectionZone_t* detect);
+void print_matrix(uint32_t matrix8x8[64]);
 void print_2_matrix_distance(DetectionZone_t* detect1, DetectionZone_t* detect2);
 void matrix_pattern(DetectionZone_t* detect);
 void calcul_counters(DetectionZone_t* detect);
 void print_counters(int counters[5]);
 void init_environment_matrix(DetectionZone_t* detect, uint32_t environment_matix[64]);
 int compare(DetectionZone_t* detect, DetectionZone_t* new_detect, int comparaison[5]);
+
+void difference_matrix(DetectionZone_t* detect, DetectionZone_t* detect_n, uint32_t matrix_difference[64]);
+int check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n);
+
 int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line);
 void copy_detection_zone(DetectionZone_t* detect, DetectionZone_t* new_detect);
 void distance2evolution(DetectionZone_t* new_detect);
