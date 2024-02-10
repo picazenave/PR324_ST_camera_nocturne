@@ -2,6 +2,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+uint8_t matrice_zones[64] = {
+    1, 1, 1, 1, 1, 1, 1, 1,
+    1, 2, 2, 2, 2, 2, 2, 1,
+    1, 2, 3, 3, 3, 3, 2, 1,
+    1, 2, 3, 4, 4, 3, 2, 1,
+    1, 2, 3, 4, 4, 3, 2, 1,
+    1, 2, 3, 3, 3, 3, 2, 1,
+    1, 2, 2, 2, 2, 2, 2, 1,
+    1, 1, 1, 1, 1, 1, 1, 1
+};
+
+uint32_t environment_matrix[64];
+
 // Implémentation des fonctions
 
 // Converte the ranging sensor to a matrix 8x8
@@ -160,7 +173,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
         detect->initialization = 1;
 
-        return INITIALIZATION;
+        return INITIALISATION;
     }
     else if (detect->initialization == 1 && detect->acquisition == 0)
     {

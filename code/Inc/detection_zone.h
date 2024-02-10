@@ -4,11 +4,6 @@
 #include <stdint.h>
 #include "custom_ranging_sensor.h"
 
-#define ERROR -1
-#define INITIALIZATION 0
-#define ACQUISITION 1
-#define ANIMAL 2
-#define CAPTURE 3
 
 #define NB_SEUIL_ZONE     (4U) /* Nombre de zone à dépasser pour affirmer une présence */
 #define TOO_CLOSE         (300U) /* Distance minimale en mm pour ne pas avoir un cible trop proche */
@@ -36,6 +31,14 @@
 #define BG_CYAN    "\x1b[46m"
 #define BG_WHITE   "\x1b[47m"
 
+// Etat du statut
+typedef enum {
+    ERREUR = -1,
+    INITIALISATION,
+    ACQUISITION,
+    ANIMAL,
+    CAPTURE
+} Etat;
 
 // Structure pour le mouvement de l'animal : Edouard
 typedef struct  // ! structure de base, nom et type peut être modifié !
@@ -49,36 +52,29 @@ typedef struct  // ! structure de base, nom et type peut être modifié !
 
 } Animal_t;
 
-
 // Structure pour DetectionZone
 typedef struct
 {
-    int initialization;
-    int acquisition;
-    int capture;
+    int      initialization;
+    int      acquisition;
+    int      capture;
     uint32_t matrix_distance[64];
     uint32_t number_of_zones;
-    uint8_t zones_per_line;
+    uint8_t  zones_per_line;
     Animal_t animal;
-    uint8_t score[64];  // Edouard : pour quel besoin ?
+    uint8_t  score[64];  // Edouard : pour quel besoin ?
 } DetectionZone_t;
 
 
-static uint8_t matrice_zones[64] = {
-    1, 1, 1, 1, 1, 1, 1, 1,
-    1, 2, 2, 2, 2, 2, 2, 1,
-    1, 2, 3, 3, 3, 3, 2, 1,
-    1, 2, 3, 4, 4, 3, 2, 1,
-    1, 2, 3, 4, 4, 3, 2, 1,
-    1, 2, 3, 3, 3, 3, 2, 1,
-    1, 2, 2, 2, 2, 2, 2, 1,
-    1, 1, 1, 1, 1, 1, 1, 1
-};
+/****************
+ * Initialization
+ ****************/
 
-static uint32_t environment_matrix[64];
-
-
-/* Initialization */
+/**
+ * @param pResult        Ranging Sensor
+ * @param zones_per_line nombre de zone par ligne
+ * @param detect         Détection de zone
+*/
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect);
 void print_matrix_distance(DetectionZone_t* detect);
 void print_matrix(uint32_t matrix8x8[64]);
@@ -92,7 +88,15 @@ void print_matrix(uint32_t matrix8x8[64]);
 void print_2_matrix_distance(DetectionZone_t* detect1, DetectionZone_t* detect2);
 void distance2evolution(DetectionZone_t* new_detect);
 
-/* Acquisition */
+/*************
+ * Acquisition
+ *************/
+
+/**
+ * @param detect matrice n-1
+ * @param detect_n matrice n
+ * @return l'indice minimum ou -1 en cas d'erreur
+*/
 int check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n);
 int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line);
 
