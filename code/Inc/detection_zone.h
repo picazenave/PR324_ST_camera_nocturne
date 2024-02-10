@@ -4,10 +4,11 @@
 #include <stdint.h>
 #include "custom_ranging_sensor.h"
 
-#define INITIALIZATION -1
-#define STABLE 0
-#define DECREASE 1
-#define INCREASE 2
+#define ERROR -1
+#define INITIALIZATION 0
+#define ACQUISITION 1
+#define ANIMAL 2
+#define CAPTURE 3
 
 #define NB_SEUIL_ZONE     (4U) /* Nombre de zone à dépasser pour affirmer une présence */
 #define TOO_CLOSE         (300U) /* Distance minimale en mm pour ne pas avoir un cible trop proche */
@@ -35,15 +36,33 @@
 #define BG_CYAN    "\x1b[46m"
 #define BG_WHITE   "\x1b[47m"
 
+
+// Structure pour le mouvement de l'animal : Edouard
+typedef struct  // ! structure de base, nom et type peut être modifié !
+{
+    // un vecteur mouvement entre deux cases
+    int vec_movement[2];
+    // une distance par rapport au centre
+    int distance_centre;
+    // une direction
+    int angle_direction;
+
+} Animal_t;
+
+
 // Structure pour DetectionZone
 typedef struct
 {
+    int initialization;
+    int acquisition;
+    int capture;
     uint32_t matrix_distance[64];
     uint32_t number_of_zones;
     uint8_t zones_per_line;
-    int counters[5];
-    uint8_t score[64];
+    Animal_t animal;
+    uint8_t score[64];  // Edouard : pour quel besoin ?
 } DetectionZone_t;
+
 
 static uint8_t matrice_zones[64] = {
     1, 1, 1, 1, 1, 1, 1, 1,
@@ -58,17 +77,34 @@ static uint8_t matrice_zones[64] = {
 
 static uint32_t environment_matrix[64];
 
+
+/* Initialization */
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect);
+<<<<<<< HEAD
 void print_matrix_distance(DetectionZone_t* detect);
 void print_matrix(uint32_t matrix8x8[64]);
 void print_2_matrix_distance(DetectionZone_t* detect1, DetectionZone_t* detect2);
+=======
+>>>>>>> 5ee879522c726ff21ed2d0133932ecfdc1f32c19
 void matrix_pattern(DetectionZone_t* detect);
-void calcul_counters(DetectionZone_t* detect);
-void print_counters(int counters[5]);
-void init_environment_matix(DetectionZone_t* detect, uint32_t environment_matix[64]);
-int compare(DetectionZone_t* detect, DetectionZone_t* new_detect, int comparaison[5]);
+void init_environment_matrix(DetectionZone_t* detect, uint32_t environment_matix[64]);
+
+/* Print matrix */
+void print_matrix_distance(DetectionZone_t* detect);
+void print_matrix(uint32_t matrix8x8[64]);
+void print_2_matrix_distance(DetectionZone_t* detect1, DetectionZone_t* detect2);
+void distance2evolution(DetectionZone_t* new_detect);
+
+/* Acquisition */
+int check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n);
 int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line);
+
+/* Copy a struct in other struct */
 void copy_detection_zone(DetectionZone_t* detect, DetectionZone_t* new_detect);
+
+/* Not use but may be use later */
+void difference_matrix(DetectionZone_t* detect, DetectionZone_t* detect_n, uint32_t matrix_difference[64]);
+
 
 
 #endif // DETECTION_ZONE_H
