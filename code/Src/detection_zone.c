@@ -107,25 +107,6 @@ void difference_matrix(DetectionZone_t* detect, DetectionZone_t* detect_n, uint3
     }
 }
 
-<<<<<<< HEAD
-    // print_2_matrix_distance(detect, new_detect);
-    
-    for (int i = 0; i < 5; ++i) {
-        int value = new_detect->counters[i] - detect->counters[i];
-        switch (value) {
-        case 0:
-            printf("You entered zero.\r\n");
-            comparaison[i] = STABLE;
-            break;
-        case 1:
-            printf("You entered a positive number.\r\n");
-            comparaison[i] = INCREASE;
-            break;
-        default:
-            printf("You entered a negative number.\r\n");
-            comparaison[i] = DECREASE;
-        }      
-=======
 // Check if there is a movement in the matrix
 int check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n) {
     // uint32_t matrix_difference[64];
@@ -147,7 +128,6 @@ int check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n) {
                     indice_min = j + k;
             }
         }
->>>>>>> 5ee879522c726ff21ed2d0133932ecfdc1f32c19
     }
 
     // Affichage du résultat
@@ -177,11 +157,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         print_matrix_distance(detect);
 
         init_environment_matrix(detect, environment_matrix);
-<<<<<<< HEAD
-=======
 
         detect->initialization = 1;
->>>>>>> 5ee879522c726ff21ed2d0133932ecfdc1f32c19
 
         return INITIALIZATION;
     }
@@ -271,30 +248,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
     {
         printf("Error\r\n");
 
-<<<<<<< HEAD
-        printf("Check the evolution\r\n");
-
-        DetectionZone_t detect_n;
-        sensor2matrix(pResult, zones_per_line, &detect_n);
-        distance2evolution(detect, &detect_n);
-        copy_detection_zone(detect, &detect_n);
-
-        // DetectionZone_t new_detect;
-
-        // sensor2matrix(pResult, zones_per_line, &new_detect);
-
-        // int comparaison[5];
-        // int status = compare(detect, &new_detect, comparaison);
-
-        // if (status != DECREASE)
-        // {
-        //     copy_detection_zone(detect, &new_detect);
-        // }
-        
-        return 1;
-=======
         return ERROR;
->>>>>>> 5ee879522c726ff21ed2d0133932ecfdc1f32c19
     }
     
 }

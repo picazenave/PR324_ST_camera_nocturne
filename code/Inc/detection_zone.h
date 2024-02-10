@@ -80,12 +80,9 @@ static uint32_t environment_matrix[64];
 
 /* Initialization */
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect);
-<<<<<<< HEAD
 void print_matrix_distance(DetectionZone_t* detect);
 void print_matrix(uint32_t matrix8x8[64]);
 void print_2_matrix_distance(DetectionZone_t* detect1, DetectionZone_t* detect2);
-=======
->>>>>>> 5ee879522c726ff21ed2d0133932ecfdc1f32c19
 void matrix_pattern(DetectionZone_t* detect);
 void init_environment_matrix(DetectionZone_t* detect, uint32_t environment_matix[64]);
 
