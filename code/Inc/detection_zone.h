@@ -46,20 +46,21 @@ typedef struct
 } DetectionZone_t;
 
 static uint8_t matrice_zones[64] = {
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 2, 2, 2, 2, 2, 2, 1,
-        1, 2, 3, 3, 3, 3, 2, 1,
-        1, 2, 3, 4, 4, 3, 2, 1,
-        1, 2, 3, 4, 4, 3, 2, 1,
-        1, 2, 3, 3, 3, 3, 2, 1,
-        1, 2, 2, 2, 2, 2, 2, 1,
-        1, 1, 1, 1, 1, 1, 1, 1
-    };
+    1, 1, 1, 1, 1, 1, 1, 1,
+    1, 2, 2, 2, 2, 2, 2, 1,
+    1, 2, 3, 3, 3, 3, 2, 1,
+    1, 2, 3, 4, 4, 3, 2, 1,
+    1, 2, 3, 4, 4, 3, 2, 1,
+    1, 2, 3, 3, 3, 3, 2, 1,
+    1, 2, 2, 2, 2, 2, 2, 1,
+    1, 1, 1, 1, 1, 1, 1, 1
+};
 
-static uint32_t environment_matix[64];
+static uint32_t environment_matrix[64];
 
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect);
 void print_matrix_distance(DetectionZone_t* detect);
+void print_matrix(uint32_t matrix8x8[64]);
 void print_2_matrix_distance(DetectionZone_t* detect1, DetectionZone_t* detect2);
 void matrix_pattern(DetectionZone_t* detect);
 void calcul_counters(DetectionZone_t* detect);

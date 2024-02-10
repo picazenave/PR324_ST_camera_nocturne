@@ -29,15 +29,15 @@ void print_matrix_distance(DetectionZone_t* detect) {
     print_matrix(detect->matrix_distance);
 }
 
-void print_matrix(uint32_t matrix8x8[64]) {
-    printf("Scores : \r\n");
-    for (u_int8_t j = 0; j < 64; j += 8)
+void print_matrix(uint32_t matrix8x8[]) {
+    for (uint8_t j = 0; j < 64; j += 8)
     {
-      for (u_int8_t k = (8 - 1); k >= 0; k--)
-      {
-        printf("| %4ld (%d) ", matrix8x8[j+k], j+k);
-      }
-      printf("|\r\n");
+        for (uint8_t k = (8 - 1); k >= 0; k--)
+        {
+        printf("| %5ld ", matrix8x8[j+k]);
+        // printf("| %5ld ", j+k);
+        }
+        printf("|\r\n");
     }
 }
 
@@ -105,10 +105,10 @@ void print_counters(int counters[5]) {
 }
 
 // Initialization of the first matrix (the environment matrix)
-void init_environment_matix(DetectionZone_t* detect, uint32_t environment_matix[64]) {
+void init_environment_matrix(DetectionZone_t* detect, uint32_t environment_matrix[64]) {
     for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
         for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
-            environment_matix[j + k] = detect->matrix_distance[j + k];
+            environment_matrix[j + k] = detect->matrix_distance[j + k];
         }
     }
     
@@ -116,7 +116,7 @@ void init_environment_matix(DetectionZone_t* detect, uint32_t environment_matix[
     for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
         printf("\r\n");
         for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
-            printf("| %4lu ", environment_matix[j + k]);
+            printf("| %4lu ", environment_matrix[j + k]);
         }
         printf("|\r\n");
     }
@@ -127,7 +127,7 @@ int compare(DetectionZone_t* detect, DetectionZone_t* new_detect, int comparaiso
     calcul_counters(detect);
     calcul_counters(new_detect);
 
-    print_2_matrix_distance(detect, new_detect);
+    // print_2_matrix_distance(detect, new_detect);
     
     for (int i = 0; i < 5; ++i) {
         int value = new_detect->counters[i] - detect->counters[i];
@@ -171,7 +171,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         print_matrix_distance(detect);
         calcul_counters(detect);
 
-        init_environment_matix(detect, environment_matix);
+        init_environment_matrix(detect, environment_matrix);
 
         return INITIALIZATION;
     }
@@ -181,19 +181,24 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
         printf("Check the evolution\r\n");
 
-        DetectionZone_t new_detect;
+        DetectionZone_t detect_n;
+        sensor2matrix(pResult, zones_per_line, &detect_n);
+        distance2evolution(detect, &detect_n);
+        copy_detection_zone(detect, &detect_n);
 
-        sensor2matrix(pResult, zones_per_line, &new_detect);
+        // DetectionZone_t new_detect;
 
-        int comparaison[5];
-        int status = compare(detect, &new_detect, comparaison);
+        // sensor2matrix(pResult, zones_per_line, &new_detect);
 
-        if (status != DECREASE)
-        {
-            copy_detection_zone(detect, &new_detect);
-        }
+        // int comparaison[5];
+        // int status = compare(detect, &new_detect, comparaison);
+
+        // if (status != DECREASE)
+        // {
+        //     copy_detection_zone(detect, &new_detect);
+        // }
         
-        return status;
+        return 1;
     }
 }
 
@@ -205,23 +210,23 @@ void distance2evolution(DetectionZone_t* detect, DetectionZone_t* new_detect) {
 
             //  Trop proche
           if (  new_detect->matrix_distance[j + k] < TOO_CLOSE &&
-              ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matix[j+k] ||
-                new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matix[j+k] ))
+              ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
+                new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] ))
           {
             // nombre_zone++;
             printf("| " RED "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
           }
           // bonne zone (donc regarder l'évolution)
           else if (  new_detect->matrix_distance[j + k] < RANGE_MAX &&
-                   ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matix[j+k] ||
-                     new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matix[j+k] ))
+                   ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
+                     new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] ))
           {
             // -------- nombre_zone++;
             printf("| " GREEN "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
           }
           // Trop loin
-          else if ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matix[j+k] ||
-                    new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matix[j+k] )
+          else if ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
+                    new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] )
           {
             printf("| " YELLOW "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
           }

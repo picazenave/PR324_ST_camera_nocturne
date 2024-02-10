@@ -254,7 +254,7 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
       // print_matrix_distance(&detect);
       // calcul_counters(&detect);
 
-      check(&detect, &Result, zones_per_line);
+      // check(&detect, &Result, zones_per_line);
 
       HAL_Delay(POLLING_PERIOD);
 
@@ -354,7 +354,7 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
   zones_per_line = ((Profile.RangingProfile == RS_PROFILE_8x8_AUTONOMOUS) ||
                     (Profile.RangingProfile == RS_PROFILE_8x8_CONTINUOUS)) ? 8 : 4;
 
-  static long init_value[64];
+  static uint32_t init_value[64];
   // for (size_t i = 0; i < 64; i++)
   // {
   //   init_value[i] = 0;
@@ -474,19 +474,18 @@ static void print_result(RANGING_SENSOR_Result_t *Result)
   }
   printf("\r\n");
 
-  // if(is_first_init)
-  // {
-    printf("Valeurs initiales : \r\n");
-    for (j = 0; j < 64; j += 8)
+
+  printf("Valeurs initiales : \r\n");
+  for (j = 0; j < 64; j += 8)
+  {
+    for (k = (8 - 1); k >= 0; k--)
     {
-      for (k = (8 - 1); k >= 0; k--)
-      {
-        printf("| %5ld ", init_value[j+k]);
-        // printf("| %5ld ", j+k);
-      }
-      printf("|\r\n");
+      printf("| %5ld ", init_value[j+k]);
+      // printf("| %5ld ", j+k);
     }
-  // }  
+    printf("|\r\n");
+  }
+  // print_matrix(init_value); 
 
   is_first_init = 0; // init juste une fois
   printf("Nombre de zone entre %d et %d : %d/%ld\r\n", TOO_CLOSE, RANGE_MAX, nombre_zone, Result->NumberOfZones);
