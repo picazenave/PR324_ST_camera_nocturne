@@ -25,14 +25,14 @@ uint8_t matrice_centre[64] = {
 };
 
 uint8_t matrice_trigo[64] = {
-    3, 3, 3, 3, 3, 3, 3, 4,
-    3, 2, 2, 2, 2, 2, 3, 4,
-    3, 2, 1, 1, 1, 2, 3, 4,
-    3, 2, 1, 0, 1, 2, 3, 4,
-    3, 2, 1, 1, 1, 2, 3, 4,
-    3, 2, 2, 2, 2, 2, 3, 4,
-    3, 3, 3, 3, 3, 3, 3, 4,
-    4, 4, 4, 4, 4, 4, 4, 4
+    1, 1, 1, 1, 2, 2, 2, 2,
+    1, 1, 1, 1, 2, 2, 2, 2,
+    1, 1, 1, 1, 2, 2, 2, 2,
+    1, 1, 1, 0, 2, 2, 2, 2,
+    3, 3, 3, 3, 4, 4, 4, 4,
+    3, 3, 3, 3, 4, 4, 4, 4,
+    3, 3, 3, 3, 4, 4, 4, 4,
+    3, 3, 3, 3, 4, 4, 4, 4
 };
 
 
@@ -354,6 +354,7 @@ void deplacement_animal(Animal_t* animal, int new_position) {
 
     // Calcul de son angle de direction
     // ! Attention l'angle de direction est liée à la position !
+    animal->direction = 0; // TODO avec une fonction
     animal->angle_direction = 0; // TODO avec une fonction
 }
 

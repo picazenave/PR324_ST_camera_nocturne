@@ -47,7 +47,8 @@ typedef struct  // ! structure de base, nom et type peut être modifié !
     int vec_movement[2];
     // une distance par rapport au centre
     int distance_centre;
-    // une direction
+    // une direction avec son angle
+    int direction;
     int angle_direction;
 
 } Animal_t;
