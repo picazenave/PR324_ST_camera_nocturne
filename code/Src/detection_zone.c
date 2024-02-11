@@ -13,6 +13,29 @@ uint8_t matrice_zones[64] = {
     1, 1, 1, 1, 1, 1, 1, 1
 };
 
+uint8_t matrice_centre[64] = {
+    3, 3, 3, 3, 3, 3, 3, 4,
+    3, 2, 2, 2, 2, 2, 3, 4,
+    3, 2, 1, 1, 1, 2, 3, 4,
+    3, 2, 1, 0, 1, 2, 3, 4,
+    3, 2, 1, 1, 1, 2, 3, 4,
+    3, 2, 2, 2, 2, 2, 3, 4,
+    3, 3, 3, 3, 3, 3, 3, 4,
+    4, 4, 4, 4, 4, 4, 4, 4
+};
+
+uint8_t matrice_trigo[64] = {
+    3, 3, 3, 3, 3, 3, 3, 4,
+    3, 2, 2, 2, 2, 2, 3, 4,
+    3, 2, 1, 1, 1, 2, 3, 4,
+    3, 2, 1, 0, 1, 2, 3, 4,
+    3, 2, 1, 1, 1, 2, 3, 4,
+    3, 2, 2, 2, 2, 2, 3, 4,
+    3, 3, 3, 3, 3, 3, 3, 4,
+    4, 4, 4, 4, 4, 4, 4, 4
+};
+
+
 uint32_t environment_matrix[64];
 
 // Implémentation des fonctions
@@ -184,10 +207,10 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         DetectionZone_t detect_n;
         sensor2matrix(pResult, zones_per_line, &detect_n);
 
+        int find = check_evolution(detect, &detect_n);
+
         // Mise à jour de la matrice N-1 par N
         copy_detection_zone(detect, &detect_n);
-
-        int find = check_evolution(detect, &detect_n);
 
         if (find != -1)
         {
@@ -199,10 +222,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
             Animal_t animal_find;
 
-            animal_find.vec_movement[0] = -1; // pas de mouvement/case au temps N-1
-            animal_find.vec_movement[1] = find; // case de détection au temps N
-            animal_find.distance_centre = 0; // TODO avec une fonction
-            animal_find.angle_direction = 0; // TODO avec une fonction
+            deplacement_animal(&animal_find, find);
 
             detect->animal = animal_find;
 
@@ -220,10 +240,10 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         DetectionZone_t detect_n;
         sensor2matrix(pResult, zones_per_line, &detect_n);
 
+        int find = check_evolution(detect, &detect_n);
+
         // Mise à jour de la matrice N-1 par N
         copy_detection_zone(detect, &detect_n);
-
-        int find = check_evolution(detect, &detect_n);
 
         if (find != -1)
         {
@@ -313,6 +333,28 @@ void copy_detection_zone(DetectionZone_t* detect, DetectionZone_t* new_detect) {
             detect->matrix_distance[j + k] = new_detect->matrix_distance[j + k];
         }
     }
+}
+
+/* Fonction pou l'animal */
+
+// Calcul de la distance au centre
+int distance_centre(Animal_t* animal) {
+
+}
+
+// Mise à jour du déplacement de l'animal
+void deplacement_animal(Animal_t* animal, int new_position) {
+
+    // Mise à jour de la position N-1 et N
+    animal->vec_movement[0] = animal->vec_movement[1];
+    animal->vec_movement[1] = new_position;
+
+    // Calcul de la distance par rapport au centre
+    animal->distance_centre = matrice_centre[animal->vec_movement[1]]; // TODO avec une fonction
+
+    // Calcul de son angle de direction
+    // ! Attention l'angle de direction est liée à la position !
+    animal->angle_direction = 0; // TODO avec une fonction
 }
 
 
