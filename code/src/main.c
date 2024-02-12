@@ -63,42 +63,46 @@ void SystemClock_Config(void);
 
 /* USER CODE END 0 */
 
-int seed_light()
+enum day_moment {JOUR, CREPUSCULE, NUIT};
+
+struct lumionsite {
+  int light_sensor;
+  enum day_moment day_moment;
+};
+
+void seed_light(struct lumionsite *lum)
 {
-  int light_sensor;  
-  int night_state;
   char str[50]; 
     
   HAL_ADC_Start(&hadc1); //deplacer
  
   //Get value
-  light_sensor = (int)HAL_ADC_GetValue(&hadc1);
+  lum->light_sensor = (int)HAL_ADC_GetValue(&hadc1);
   char str6[15]; 
-  sprintf(str6, "Lumionsité : %d\n", light_sensor);
+  sprintf(str6, "Lumionsité : %d\n", lum->light_sensor);
 	HAL_UART_Transmit_IT(&huart2,(uint8_t*)str6,strlen(str6));
   HAL_Delay(100);
-  if (light_sensor<700)
+  if (lum->light_sensor<700)
   {
-    night_state = 1;
+    lum->day_moment = NUIT;
     sprintf(str, "C'est la nuit.\n"); 
 		HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
     HAL_Delay(1000);
   }
-  else if((light_sensor > 700) &&(light_sensor < 1700))
+  else if((lum->light_sensor > 700) &&(lum->light_sensor < 1700))
   {
-    night_state = 2;
+    lum->day_moment = CREPUSCULE;
     sprintf(str, "C'est le crépuscule.\n"); 
 		HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
-    HAL_Delay(1000);
+    HAL_Delay(100);
   }
-  else if (light_sensor > 1700)
+  else if ((lum->light_sensor > 1700))
   {
-    night_state = 0;
+    lum->day_moment = JOUR;
     sprintf(str, "C'est le jour.\n"); 
 		HAL_UART_Transmit_IT(&huart2,(uint8_t*)str,strlen(str));
-    HAL_Delay(1000);
+    HAL_Delay(100);
   }
-  return night_state;
 }
 
 int seed_pir()
@@ -217,8 +221,6 @@ int main(void)
 
   uint8_t pir2;
   char str3[15];
-
-  int night_state;
   /////////////////////////Configuration des registre PIR detection ONSEMI PIR-GEVB////////////////////////////
   uint8_t config_register_data[1] = {0xFE}; // Met IO0_0 (xLED_EN) en sortie, les autres en entrée  //dans registre 6 0b00000110 //pour FE 0b11111110
   HAL_I2C_Mem_Write(&hi2c1, 0x24, 0x06, 1, &config_register_data, 1, HAL_MAX_DELAY);
@@ -254,7 +256,13 @@ int main(void)
 
     /////////////////////////////////////////Light detection 101020132 Seed///////////////////////////////////////
     //init
-    night_state = seed_light();
+    struct lumionsite *light_detect = malloc(sizeof(struct lumionsite));
+    seed_light(light_detect);
+    /*char str8[15];
+    sprintf(str8, "valeur 222222222: %d\n", light_detect->light_sensor);
+		HAL_UART_Transmit_IT(&huart2,(uint8_t*)str8,strlen(str8));
+    HAL_Delay(1000);*/
+    free(light_detect);
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     
 
