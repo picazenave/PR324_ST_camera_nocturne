@@ -52,10 +52,13 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t img_buffer[65500] = {0}; // uint16_t max is 65535
-volatile uint8_t uart_rx_done = 0;
+uint8_t img_buffer[65535] = {0}; // uint16_t max is 65535
+volatile uint8_t uart2_rx_done = 0;
+volatile uint8_t uart1_tx_done = 0;
 volatile uint8_t HT = 0;
 volatile uint8_t TC = 0;
+
+uint8_t jpg_header[5]= {0x11,0x12,0x55,0x44,0xFF};
 
 enum frame_size_t
 {
@@ -90,9 +93,9 @@ void SystemClock_Config(void);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -137,14 +140,14 @@ int main(void)
   printf("\r\n=====Camera Init=====\r\n\r\n");
   // 1 for default values
   // serial_camera_config_t camera_config = {.brightness = 0, .special_effect = 0, .jpg_quality = 30, .frame_size = FRAMESIZE_UXGA};
-   printf("RESET CAM\r\n");
-  HAL_GPIO_WritePin(CAMERA_RST_N_GPIO_Port,CAMERA_RST_N_Pin,GPIO_PIN_RESET);
+  printf("RESET CAM\r\n");
+  HAL_GPIO_WritePin(CAMERA_RST_N_GPIO_Port, CAMERA_RST_N_Pin, GPIO_PIN_RESET);
   HAL_Delay(1000);
-  HAL_GPIO_WritePin(CAMERA_RST_N_GPIO_Port,CAMERA_RST_N_Pin,GPIO_PIN_SET);
+  HAL_GPIO_WritePin(CAMERA_RST_N_GPIO_Port, CAMERA_RST_N_Pin, GPIO_PIN_SET);
   HAL_Delay(1000);
   printf("RESET CAM DONE\r\n");
-  uint8_t temp[200]={0};
-  HAL_UART_Receive(&huart1,temp,200,500);
+  uint8_t temp[200] = {0};
+  HAL_UART_Receive(&huart1, temp, 200, 500);
   CHECK_HAL_STATUS_OR_PRINT(camera_init(use_default_camera_config));
   printf("Camera init DONE\r\n");
 
@@ -214,13 +217,14 @@ int main(void)
    */
   printf("\r\n=====Test jpg saving=====\r\n\r\n");
   // find next jpg name
+  HAL_StatusTypeDef status = HAL_ERROR;
   uint16_t jpg_counter = 0;
   char jpg_name[20] = {0};
-  snprintf(jpg_name, 20, "photo%u.jpg\0", jpg_counter);
+  snprintf(jpg_name, 20, "photo%u.jpg", jpg_counter);
   fres = f_open(&fil, jpg_name, FA_READ);
   while (fres == FR_OK)
   {
-    snprintf(jpg_name, 20, "photo%u.jpg\0", jpg_counter);
+    snprintf(jpg_name, 20, "photo%u.jpg", jpg_counter);
     fres = f_open(&fil, jpg_name, FA_READ);
     if (fres != FR_OK)
     {
@@ -255,9 +259,9 @@ int main(void)
   HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
 
   // wait end of transfer
-  while (!uart_rx_done)
+  while (!uart2_rx_done)
     ;
-  uart_rx_done = 0;
+  uart2_rx_done = 0;
   printf("jpg received --> DMA\r\n");
 
   UINT bytesWrote = 0;
@@ -272,10 +276,25 @@ int main(void)
   }
   f_close(&fil);
 
-  for (u_int32_t i = 0; i < img_len; i++)
-    printf("%.2X", img_buffer[i]);
+  status=HAL_UART_Transmit(&huart2,jpg_header,sizeof(jpg_header),uart1_timeout);
+  CHECK_HAL_STATUS_OR_PRINT(status);
+  to_transmit[0]=(uint8_t)(img_len>>8);
+  to_transmit[1]=(uint8_t)(img_len&0xFF);
+  status=HAL_UART_Transmit(&huart2,to_transmit,2,uart1_timeout);
+  CHECK_HAL_STATUS_OR_PRINT(status);
+  status=HAL_UART_Transmit_DMA(&huart2, img_buffer, img_len);
+  CHECK_HAL_STATUS_OR_PRINT(status);
+  to_transmit[0]=0x11;
+  to_transmit[1]=0x12;
+  status=HAL_UART_Transmit(&huart2,to_transmit,2,uart1_timeout);
+  CHECK_HAL_STATUS_OR_PRINT(status);
+  while (!uart1_tx_done)
+    ;
+  uart1_tx_done = 0;
+  // for (u_int32_t i = 0; i < img_len; i++)
+  //   printf("%.2X", img_buffer[i]);
 
-  printf("\r\n\r\n DONE \r\n");
+  printf("\r\n\r\n DONE  \r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -298,22 +317,22 @@ int main(void)
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
-  */
+   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
 
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -329,9 +348,8 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -346,7 +364,14 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  uart_rx_done = 1;
+  if (huart->Instance == USART1)
+  {
+    uart2_rx_done = 1;
+  }
+  else if (huart->Instance == USART2)
+  {
+    uart1_tx_done = 1;
+  }
 }
 
 HAL_StatusTypeDef camera_init(uint8_t default_config)
@@ -526,9 +551,9 @@ void i2c_scanner()
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -540,14 +565,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
