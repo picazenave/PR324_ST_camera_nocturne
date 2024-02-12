@@ -38,7 +38,7 @@ while(True):
     s=ser.read_all()
     size_s=len(s)
     if(size_s>0):
-        print(bcolors.OKGREEN + "[PYTHON]"+bcolors.ENDC+"size_s="+str(size_s))
+        print(bcolors.OKBLUE + "[PYTHON]"+bcolors.ENDC+"size_s="+str(size_s))
     i=0
     while i<size_s:#try to find jpg_header
         if(i+5<size_s):
@@ -65,6 +65,7 @@ while(True):
                     im = cv2.imdecode(s_byte,cv2.IMREAD_UNCHANGED)
                     cv2.imshow(window_name, im)
                     cv2.waitKey(1) 
+                    print(bcolors.OKGREEN + "[PYTHON]"+bcolors.ENDC+"cv2 decode OK")
                 except :
                     print(bcolors.FAIL + "[PYTHON]"+bcolors.ENDC+"cv2 decode error")
                 i=i+im_len

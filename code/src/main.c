@@ -53,12 +53,12 @@
 
 /* USER CODE BEGIN PV */
 uint8_t img_buffer[65535] = {0}; // uint16_t max is 65535
-volatile uint8_t uart2_rx_done = 0;
-volatile uint8_t uart1_tx_done = 0;
+volatile uint8_t uart2_tx_done = 0;
+volatile uint8_t uart1_rx_done = 0;
 volatile uint8_t HT = 0;
 volatile uint8_t TC = 0;
 
-uint8_t jpg_header[5]= {0x11,0x12,0x55,0x44,0xFF};
+uint8_t jpg_header[5] = {0x11, 0x12, 0x55, 0x44, 0xFF};
 
 enum frame_size_t
 {
@@ -259,9 +259,9 @@ int main(void)
   HAL_UART_Transmit(&huart1, to_transmit, 1, uart1_timeout);
 
   // wait end of transfer
-  while (!uart2_rx_done)
+  while (!uart1_rx_done)
     ;
-  uart2_rx_done = 0;
+  uart1_rx_done = 0;
   printf("jpg received --> DMA\r\n");
 
   UINT bytesWrote = 0;
@@ -276,21 +276,18 @@ int main(void)
   }
   f_close(&fil);
 
-  status=HAL_UART_Transmit(&huart2,jpg_header,sizeof(jpg_header),uart1_timeout);
+  status = HAL_UART_Transmit(&huart2, jpg_header, sizeof(jpg_header), uart1_timeout);
   CHECK_HAL_STATUS_OR_PRINT(status);
-  to_transmit[0]=(uint8_t)(img_len>>8);
-  to_transmit[1]=(uint8_t)(img_len&0xFF);
-  status=HAL_UART_Transmit(&huart2,to_transmit,2,uart1_timeout);
+  to_transmit[0] = (uint8_t)(img_len >> 8);
+  to_transmit[1] = (uint8_t)(img_len & 0xFF);
+  status = HAL_UART_Transmit(&huart2, to_transmit, 2, uart1_timeout);
   CHECK_HAL_STATUS_OR_PRINT(status);
-  status=HAL_UART_Transmit_DMA(&huart2, img_buffer, img_len);
+  status = HAL_UART_Transmit_DMA(&huart2, img_buffer, img_len);
   CHECK_HAL_STATUS_OR_PRINT(status);
-  to_transmit[0]=0x11;
-  to_transmit[1]=0x12;
-  status=HAL_UART_Transmit(&huart2,to_transmit,2,uart1_timeout);
-  CHECK_HAL_STATUS_OR_PRINT(status);
-  while (!uart1_tx_done)
+
+  while (!uart2_tx_done)
     ;
-  uart1_tx_done = 0;
+  uart2_tx_done = 0;
   // for (u_int32_t i = 0; i < img_len; i++)
   //   printf("%.2X", img_buffer[i]);
 
@@ -304,7 +301,7 @@ int main(void)
   while (1)
   {
     // HAL_Delay(300);
-    if (tick_count % 10000 == 0)
+    if (tick_count % 1000 == 0)
       HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
 
     HAL_Delay(10);
@@ -366,11 +363,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART1)
   {
-    uart2_rx_done = 1;
+    uart1_rx_done = 1;
   }
-  else if (huart->Instance == USART2)
+}
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART2)
   {
-    uart1_tx_done = 1;
+    uart2_tx_done = 1;
   }
 }
 
