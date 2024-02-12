@@ -20,7 +20,10 @@
 			"stm32f4xx.h": "c",
 			"tm_stm32f4_fatfs.h": "c",
 			"tm_stm32f4_delay.h": "c",
-			"main.h": "c"
+			"main.h": "c",
+			"fatfs.h": "c",
+			"string.h": "c",
+			"stdio.h": "c"
 		}
 	}
 }

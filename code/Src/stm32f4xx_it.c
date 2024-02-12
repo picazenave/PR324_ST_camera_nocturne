@@ -224,12 +224,7 @@ void DMA1_Stream6_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-  if (LL_USART_IsEnabledIT_IDLE(USART1) && LL_USART_IsActiveFlag_IDLE(USART1))
-  {
-    LL_USART_ClearFlag_IDLE(USART1); /* Clear IDLE line flag */
-    HAL_UART_Transmit(&huart2,"idle UART1 \r\n",13,300);       /* Check for data to process */
-  }
-  HAL_UART_Transmit(&huart2,"IT UART1 \r\n",11,300);
+  
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
