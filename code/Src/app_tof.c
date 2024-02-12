@@ -254,9 +254,10 @@ static void MX_VL53L5CX_SimpleRanging_Process(void)
       // print_matrix_distance(&detect);
       // calcul_counters(&detect);
 
-      // check(&detect, &Result, zones_per_line);
+      check(&detect, &Result, zones_per_line);
+      HAL_Delay(3000);
 
-      HAL_Delay(POLLING_PERIOD);
+      // HAL_Delay(POLLING_PERIOD);
 
       // detection_animal(&Result);
     }

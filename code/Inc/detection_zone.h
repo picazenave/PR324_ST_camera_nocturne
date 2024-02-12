@@ -95,7 +95,7 @@ void distance2evolution(DetectionZone_t* new_detect);
  * @param detect_n matrice n
  * @return l'indice minimum ou -1 en cas d'erreur
 */
-int check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n);
+int8_t check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n);
 int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line);
 
 /* Copy a struct in other struct */
