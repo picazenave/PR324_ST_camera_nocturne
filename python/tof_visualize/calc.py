@@ -1,8 +1,8 @@
 # calc time it takes to trasnmit tof matrix over uart
 
-uart_speed=115200
+uart_speed=1000000
 frame_size=10
-tof_matrix_size=8*8
+tof_matrix_size=8*8+65000
 
 time_one_frame=frame_size/uart_speed
 print('time one frame : ' + str(time_one_frame) + 's')

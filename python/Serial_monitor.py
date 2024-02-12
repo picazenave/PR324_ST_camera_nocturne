@@ -26,7 +26,7 @@ def is_jpg_header(s):
 #=======================================
 window_name='Tof matrix'
 
-ser = serial.Serial('COM7', 1000000)
+ser = serial.Serial('COM7', 2000000)
 print(ser.name)
 ser.reset_input_buffer()
 ser.reset_output_buffer()
