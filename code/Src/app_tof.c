@@ -40,12 +40,6 @@ extern "C" {
 #define TIMING_BUDGET     (30U) /* 5 ms < TimingBudget < 100 ms */
 #define RANGING_FREQUENCY (5U) /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
 #define POLLING_PERIOD    (1000U/RANGING_FREQUENCY) /* refresh rate for polling mode (milliseconds) */
-#define NB_SEUIL_ZONE     (4U) /* Nombre de zone à dépasser pour affirmer une présence */
-#define TOO_CLOSE         (300U) /* Distance minimale en mm pour ne pas avoir un cible trop proche */
-#define RANGE_MAX         (1000U) /* Distance maximale en mm pour ne pas avoir un cible trop éloignée */
-#define SEUIL_BRUIT       (3U) /* Le capteur détecte des distances différentes en étant immobile, on rajoute un seuil en % */
-#define SEUIL_BRUIT_PLUS  (1.f + (float)SEUIL_BRUIT/100.f)
-#define SEUIL_BRUIT_MOINS (1.f - (float)SEUIL_BRUIT/100.f)
 
 // Définition des couleurs
 #define BLACK      "\x1b[30m"
