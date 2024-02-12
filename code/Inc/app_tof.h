@@ -27,12 +27,20 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "detection_zone.h"
+#include "custom_ranging_sensor.h"
 
 /* Exported defines ----------------------------------------------------------*/
+/* #define USE_BARE_DRIVER */
+#define TIMING_BUDGET     (30U) /* 5 ms < TimingBudget < 100 ms */
+#define RANGING_FREQUENCY (5U) /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
+#define POLLING_PERIOD    (1000U/RANGING_FREQUENCY) /* refresh rate for polling mode (milliseconds) */
+#define NB_SEUIL_ZONE     (4U) /* Nombre de zone à dépasser pour affirmer une présence */
+
 
 /* Exported functions --------------------------------------------------------*/
-void MX_TOF_Init(void);
-void MX_TOF_Process(void);
+void MX_VL53L5CX_ToF_Init(void);
+int MX_VL53L5CX_ToF_Process(DetectionZone_t* detect);
 
 #ifdef __cplusplus
 }

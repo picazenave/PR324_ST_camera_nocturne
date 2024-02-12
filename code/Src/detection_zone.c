@@ -67,16 +67,23 @@ void print_matrix_distance(DetectionZone_t* detect) {
     printf("\r\n");
 }
 
-void print_matrix(uint32_t matrix8x8[]) {
+void print_matrix(uint32_t* matrix8x8) {
+    printf("fonction == detect->matrix_distance:%p \r\n",matrix8x8);
     for (uint8_t j = 0; j < 64; j += 8)
     {
-        for (uint8_t k = (8 - 1); k >= 0; k--)
+        for (int8_t k = (8 - 1); k >= 0; k--)
         {
-        printf("| %5ld ", matrix8x8[j+k]);
+        printf("| %4ld ", matrix8x8[j+k]);
         // printf("| %5ld ", j+k);
         }
         printf("|\r\n");
     }
+    //  for (uint8_t k =0; k <64; k++)
+    //     {
+    //     printf("| %4ld ", matrix8x8[k]);
+        
+    //     }
+    //     printf("|\r\n");
 }
 
 // Print 2 matrix 8x8
@@ -204,7 +211,14 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         printf("Initialization\r\n");
 
         sensor2matrix(pResult, zones_per_line, detect);
-        print_matrix_distance(detect);
+        // print_matrix_distance(detect);
+
+        printf("pointer detect:%p || detect->matrix_distance:%p \r\n",detect,detect->matrix_distance);
+
+
+        print_matrix(detect->matrix_distance);
+
+        
 
         init_environment_matrix(detect, environment_matrix);
 
