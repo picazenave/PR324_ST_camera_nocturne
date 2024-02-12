@@ -183,6 +183,8 @@ int check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n) {
 
 // Check the comparaison and return a status
 int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
+    int find = -1;
+
     if (detect->initialization != 1)
     {
         // Initialization, so no check and just register
@@ -207,7 +209,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         DetectionZone_t detect_n;
         sensor2matrix(pResult, zones_per_line, &detect_n);
 
-        int find = check_evolution(detect, &detect_n);
+        find = check_evolution(detect, &detect_n);
 
         // Mise à jour de la matrice N-1 par N
         copy_detection_zone(detect, &detect_n);
@@ -215,6 +217,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         if (find != -1)
         {
             // An animal is detected
+
+            printf("An animal is detected (@%d)\r\n", find);
 
             detect->acquisition = 1;
 
@@ -240,7 +244,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         DetectionZone_t detect_n;
         sensor2matrix(pResult, zones_per_line, &detect_n);
 
-        int find = check_evolution(detect, &detect_n);
+        find = check_evolution(detect, &detect_n);
 
         // Mise à jour de la matrice N-1 par N
         copy_detection_zone(detect, &detect_n);
@@ -248,6 +252,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         if (find != -1)
         {
             // The animal is in movement
+
+            printf("An animal is in movement (@%d)\r\n", find);
 
             // mettre a jour la structure de l'animal : Edouard
             // detect->animal->
