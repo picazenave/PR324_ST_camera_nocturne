@@ -62,6 +62,7 @@ typedef struct
     uint32_t matrix_distance[64];
     uint32_t number_of_zones;
     uint8_t  zones_per_line;
+    uint8_t  score;
     Animal_t animal;
 } DetectionZone_t;
 
@@ -90,7 +91,7 @@ void print_matrix(uint32_t matrix8x8[64]);
  * @param matrix8x8_2[64] une matrice 8x8
 */
 void print_2_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]);
-void distance2evolution(DetectionZone_t* new_detect);
+void print_matrix_color(DetectionZone_t* detect_cur);
 
 /*************
  * Acquisition
@@ -106,7 +107,8 @@ int8_t check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n);
 int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line);
 
 /* Copy a struct in other struct */
-void copy_detection_zone(DetectionZone_t* detect, DetectionZone_t* new_detect);
+void copy_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]);
+void copy_detection_zone(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur);
 
 /* Not use but may be use later */
 void difference_matrix(DetectionZone_t* detect, DetectionZone_t* detect_n, uint32_t matrix_difference[64]);

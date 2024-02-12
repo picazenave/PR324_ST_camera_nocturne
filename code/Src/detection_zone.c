@@ -59,12 +59,6 @@ void print_matrix(uint32_t matrix8x8[64]) {
         }
         printf("|\r\n");
     }
-    //  for (uint8_t k =0; k <64; k++)
-    //     {
-    //     printf("| %4ld ", matrix8x8[k]);
-        
-    //     }
-    //     printf("|\r\n");
 }
 
 void print_2_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]) {
@@ -84,15 +78,6 @@ void init_environment_matrix(DetectionZone_t* detect, uint32_t environment_matri
             environment_matrix[j + k] = detect->matrix_distance[j + k];
         }
     }
-    
-    printf("Environment matrix:\r\n");
-    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
-        printf("\r\n");
-        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
-            printf("| %4lu ", environment_matrix[j + k]);
-        }
-        printf("|\r\n");
-    }
 }
 
 // Do the a subtraction : matrix_difference = detect->matrix_distance - detect_n->matrix_distance
@@ -109,16 +94,7 @@ void difference_matrix(DetectionZone_t* detect, DetectionZone_t* detect_n, uint3
 
 // Check if there is a movement in the matrix
 int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur) {
-    // uint32_t matrix_difference[64];
-
-    // printf("Matrice distance (différence N-1 - N):\r\n");
-    // difference_matrix(detect_pre, detect_n, matrix_difference);
-
-    // printf("Matrice distance (différence N-1 - N):\r\n");
-    // print_matrix(matrix_difference);
-
-    print_2_matrix(detect_pre->matrix_distance, detect_cur->matrix_distance);
-
+    detect_cur->score = 0;
     uint32_t min = RANGE_MAX;
     int8_t indice_min = -1;
 
@@ -126,28 +102,18 @@ int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur)
         for (int k = (detect_pre->zones_per_line - 1); k >= 0; k--) {
             if (  detect_cur->matrix_distance[j + k] > TOO_CLOSE && detect_cur->matrix_distance[j + k] < RANGE_MAX &&
                 ( detect_cur->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
-                  detect_cur->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] ) &&
-                  detect_cur->matrix_distance[j + k] < min) {
-                    min = detect_cur->matrix_distance[j + k];
-                    indice_min = j + k;
-                    printf("indice = %d for min distance = %d\r\n", indice_min, min);
+                  detect_cur->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] )) {
+                    detect_cur->score++;
+                    if (detect_cur->matrix_distance[j + k] < min)
+                    {
+                        min = detect_cur->matrix_distance[j + k];
+                        indice_min = j + k;
+                    }
             }
         }
     }
 
-    // Affichage du résultat
-    if (indice_min == -1)
-    {
-        printf("No detection, find = %d\r\n", indice_min);
-        return -1;
-    }
-    else
-    {
-        printf("Le minimum du tableau est : %d\r\n", min);
-        printf("Son indice est : %d\r\n", indice_min);
-        printf("La distance réelle : %4lu\r\n", detect_cur->matrix_distance[indice_min]);
-        return indice_min;
-    }
+    return indice_min;
 }
 
 // Check the comparaison and return a status
@@ -270,52 +236,54 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 }
 
 // Convert a distance matrix a evolution 
-void distance2evolution(DetectionZone_t* new_detect) {
-    for (int j = 0; j < new_detect->number_of_zones; j += new_detect->zones_per_line) {
-        for (int k = (new_detect->zones_per_line - 1); k >= 0; k--) {
+void print_matrix_color(DetectionZone_t* detect_cur) {
+    for (int j = 0; j < detect_cur->number_of_zones; j += detect_cur->zones_per_line) {
+        for (int k = (detect_cur->zones_per_line - 1); k >= 0; k--) {
 
 
             //  Trop proche
-          if (  new_detect->matrix_distance[j + k] < TOO_CLOSE &&
-              ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
-                new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] ))
+          if (  detect_cur->matrix_distance[j + k] < TOO_CLOSE &&
+              ( detect_cur->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
+                detect_cur->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] ))
           {
             // nombre_zone++;
-            printf("| " RED "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
+            printf("| " RED "%5ld" RESET " ", (long)detect_cur->matrix_distance[j + k]);
           }
           // bonne zone (donc regarder l'évolution)
-          else if (  new_detect->matrix_distance[j + k] < RANGE_MAX &&
-                   ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
-                     new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] ))
+          else if (  detect_cur->matrix_distance[j + k] < RANGE_MAX &&
+                   ( detect_cur->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
+                     detect_cur->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] ))
           {
             // -------- nombre_zone++;
-            printf("| " GREEN "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
+            printf("| " GREEN "%5ld" RESET " ", (long)detect_cur->matrix_distance[j + k]);
           }
           // Trop loin
-          else if ( new_detect->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
-                    new_detect->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] )
+          else if ( detect_cur->matrix_distance[j + k] > SEUIL_BRUIT_PLUS  * environment_matrix[j+k] ||
+                    detect_cur->matrix_distance[j + k] < SEUIL_BRUIT_MOINS * environment_matrix[j+k] )
           {
-            printf("| " YELLOW "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
+            printf("| " YELLOW "%5ld" RESET " ", (long)detect_cur->matrix_distance[j + k]);
           }
           // Stable
           else
           {
-            printf("| " WHITE "%5ld" RESET " ", (long)new_detect->matrix_distance[j + k]);
+            printf("| " WHITE "%5ld" RESET " ", (long)detect_cur->matrix_distance[j + k]);
           }
         }
     }
 }
 
-// Copy the DetectionZone_t structure "new_detect" in the DetectionZone_t structure "detect"
-void copy_detection_zone(DetectionZone_t* detect, DetectionZone_t* new_detect) {
-    // detect->zones_per_line = new_detect->zones_per_line;
-    // detect->number_of_zones = new_detect->zones_per_line;
-
-    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
-        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
-            detect->matrix_distance[j + k] = new_detect->matrix_distance[j + k];
+void copy_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]) {
+    for (uint8_t j = 0; j < 64; j += 8) {
+        for (int8_t k = (8 - 1); k >= 0; k--) {
+            matrix8x8_1[j + k] = matrix8x8_2[j + k];
         }
     }
+}
+
+// Copy the DetectionZone_t structure "detect_cur" in the DetectionZone_t structure "detect"
+void copy_detection_zone(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur) {
+    detect_pre->score = detect_cur->score;
+    copy_matrix(detect_pre->matrix_distance, detect_cur->matrix_distance);
 }
 
 /* Fonction pou l'animal */
