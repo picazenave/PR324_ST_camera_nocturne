@@ -51,6 +51,9 @@
 /* Private variables ---------------------------------------------------------*/
 RTC_HandleTypeDef hrtc;
 
+DetectionZone_t detect;
+Animal_t animal;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -99,7 +102,7 @@ int main(void)
   // MX_USART2_UART_Init();
 
   MX_RTC_Init();
-  MX_TOF_Init();
+  MX_VL53L5CX_ToF_Init();
 
   /* USER CODE BEGIN 2 */
 
@@ -111,7 +114,28 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-    MX_TOF_Process();
+    detect.animal = animal;
+    int status = MX_VL53L5CX_ToF_Process(&detect);
+    printf("******************************\r\n");
+    switch (status)
+    {
+    case INITIALISATION:
+      printf("ToF status : Initialisation\r\n");
+      break;
+    case ACQUISITION:
+      printf("ToF status : Search an animal\r\n");
+      break;
+    case ANIMAL:
+      printf("ToF status : Following an animal\r\n");
+      break;
+    case CAPTURE:
+      printf("ToF status : Capture the animal\r\n");
+      break;
+    default:
+      printf("ToF status : Error\r\n");
+      break;
+    }
+    printf("******************************\r\n");
     
 
     // distance_value[indice];

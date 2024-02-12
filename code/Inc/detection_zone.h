@@ -63,7 +63,6 @@ typedef struct
     uint32_t number_of_zones;
     uint8_t  zones_per_line;
     Animal_t animal;
-    uint8_t  score[64];  // Edouard : pour quel besoin ?
 } DetectionZone_t;
 
 

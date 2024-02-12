@@ -59,6 +59,12 @@ void print_matrix(uint32_t matrix8x8[64]) {
         }
         printf("|\r\n");
     }
+    //  for (uint8_t k =0; k <64; k++)
+    //     {
+    //     printf("| %4ld ", matrix8x8[k]);
+        
+    //     }
+    //     printf("|\r\n");
 }
 
 void print_2_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]) {
