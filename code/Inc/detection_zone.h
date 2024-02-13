@@ -113,8 +113,9 @@ void copy_detection_zone(DetectionZone_t* detect_pre, DetectionZone_t* detect_cu
 /* Not use but may be use later */
 void difference_matrix(DetectionZone_t* detect, DetectionZone_t* detect_n, uint32_t matrix_difference[64]);
 
-/* Fonction pou l'animal */
+/* Fonction pour l'animal */
 int distance_centre(Animal_t* animal);
 void deplacement_animal(Animal_t* animal, int new_position);
+void print_animal(Animal_t* animal);
 
 #endif // DETECTION_ZONE_H

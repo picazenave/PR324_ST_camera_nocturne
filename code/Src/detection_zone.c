@@ -119,6 +119,7 @@ int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur)
 // Check the comparaison and return a status
 int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
     int8_t find = -1;
+    Animal_t animal_find;
 
     if (detect->initialization != 1)
     {
@@ -157,8 +158,6 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
             // voir la définition de la structure : Edouard
 
-            Animal_t animal_find;
-
             deplacement_animal(&animal_find, find);
 
             detect->animal = animal_find;
@@ -194,6 +193,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
             // mettre a jour la structure de l'animal : Edouard
             // detect->animal->
+            deplacement_animal(&animal_find, find);
 
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect, &detect_cur);
@@ -307,4 +307,14 @@ void deplacement_animal(Animal_t* animal, int new_position) {
     // ! Attention l'angle de direction est liée à la position !
     animal->direction = 0; // TODO avec une fonction
     animal->angle_direction = 0; // TODO avec une fonction
+
+    print_animal(animal);
+}
+
+void print_animal(Animal_t* animal) {
+    printf("Animal :\r\n");
+    printf("Position (N-1) : @%d  =>  Position (N) : @%d\r\n", animal->vec_movement[0], animal->vec_movement[1]);
+    printf("Distance au centre : %d\r\n", animal->distance_centre);
+    printf("Diretion : %d\r\n", animal->direction);
+    printf("Angle de direction : %d\r\n", animal->angle_direction);
 }
