@@ -142,7 +142,8 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
         find = check_evolution(detect_pre, &detect_cur);
         printf("find = %d\r\n", find);
 
-        if (find != -1) // An animal is detected
+        // An animal is detected
+        if (find != -1)
         {
             printf("An animal is detected (@%d)\r\n", find);
 
@@ -174,10 +175,9 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
         find = check_evolution(detect_pre, &detect_cur);
         printf("find = %d\r\n", find);
 
+        // The animal is in movement
         if (find != -1)
         {
-            // The animal is in movement
-
             printf("An animal is in movement (@%d)\r\n", find);
 
             // mettre a jour la structure de l'animal : Edouard
@@ -192,10 +192,9 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
             // si l'animal s'éloigne du centre et sa direction aussi alors on continue le capture
             return CAPTURE;
         }
+        // The animal disappears
         else
         {
-            // The animal disappears
-
             detect_pre->capture = 1;
 
             // Mise à jour de la matrice N-1 par N
@@ -215,7 +214,8 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
 
         return ACQUISITION;
     }
-    else // Error
+    // Error
+    else
     {
         printf("Error\r\n");
 
@@ -281,20 +281,21 @@ int distance_centre(Animal_t* animal) {
 }
 
 // Mise à jour du déplacement de l'animal
-void deplacement_animal(Animal_t* animal, int new_position) {
-
-    
+void deplacement_animal(Animal_t* animal, int new_position) {    
     // Mise à jour de la position N-1 et N
     animal->vec_movement[0] = animal->vec_movement[1];
     animal->vec_movement[1] = new_position;
 
-    // Calcul de la distance par rapport au centre
-    animal->distance_centre = matrice_centre[animal->vec_movement[1]]; // TODO avec une fonction
+    if (animal->vec_movement[0] != -1)
+    {
+        // Calcul de la distance par rapport au centre
+        animal->distance_centre = matrice_centre[animal->vec_movement[1]]; // TODO avec une fonction
 
-    // Calcul de son angle de direction
-    // ! Attention l'angle de direction est liée à la position !
-    animal->direction = 0; // TODO avec une fonction
-    animal->angle_direction = 0; // TODO avec une fonction
+        // Calcul de son angle de direction
+        // ! Attention l'angle de direction est liée à la position !
+        animal->direction = 0; // TODO avec une fonction
+        animal->angle_direction = 0; // TODO avec une fonction
+    }
 
     print_animal(animal);
 }
