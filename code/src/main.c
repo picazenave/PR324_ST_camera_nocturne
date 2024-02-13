@@ -114,26 +114,26 @@ int main(void)
   HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
   MX_VL53L5CX_ToF_Init();
 
-  HAL_StatusTypeDef status = HAL_ERROR;
+  // HAL_StatusTypeDef status = HAL_ERROR;
 
-  status = camera_init(0); // 0 not default config
-  CHECK_HAL_STATUS_OR_PRINT(status);
-  status = sd_init();
-  CHECK_HAL_STATUS_OR_PRINT(status);
-  /**
-   * Test jpg saving
-   */
-  printf("\r\n=====Test jpg saving=====\r\n\r\n");
-  printf(" get_camera_jpg  \r\n");
-  status = get_camera_jpg(&img_struct);
-  CHECK_HAL_STATUS_OR_PRINT(status);
-  printf(" save_picture_sd  \r\n");
-  status = save_picture_sd(&img_struct);
-  CHECK_HAL_STATUS_OR_PRINT(status);
-  printf(" send_jpg_uart2  \r\n");
-  status = send_jpg_uart2(&img_struct);
-  CHECK_HAL_STATUS_OR_PRINT(status);
-  printf("\r\n\r\n DONE  \r\n");
+  // status = camera_init(0); // 0 not default config
+  // CHECK_HAL_STATUS_OR_PRINT(status);
+  // status = sd_init();
+  // CHECK_HAL_STATUS_OR_PRINT(status);
+  // /**
+  //  * Test jpg saving
+  //  */
+  // printf("\r\n=====Test jpg saving=====\r\n\r\n");
+  // printf(" get_camera_jpg  \r\n");
+  // status = get_camera_jpg(&img_struct);
+  // CHECK_HAL_STATUS_OR_PRINT(status);
+  // printf(" save_picture_sd  \r\n");
+  // status = save_picture_sd(&img_struct);
+  // CHECK_HAL_STATUS_OR_PRINT(status);
+  // printf(" send_jpg_uart2  \r\n");
+  // status = send_jpg_uart2(&img_struct);
+  // CHECK_HAL_STATUS_OR_PRINT(status);
+  // printf("\r\n\r\n DONE  \r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
