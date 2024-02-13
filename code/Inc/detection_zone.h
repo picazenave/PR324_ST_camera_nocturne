@@ -71,6 +71,9 @@ typedef struct
  * Initialization
  ****************/
 
+void init_animal(Animal_t* animal);
+void init_detection_zone(DetectionZone_t* detect);
+
 /**
  * @param pResult        Ranging Sensor
  * @param zones_per_line nombre de zone par ligne

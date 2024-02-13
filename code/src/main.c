@@ -114,10 +114,9 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-    animal.vec_movement[0] = -1;
-    animal.vec_movement[1] = -1;
     detect.animal = animal;
-    
+    init_detection_zone(&detect);
+  
     int status = MX_VL53L5CX_ToF_Process(&detect);
     printf("******************************\r\n");
     switch (status)

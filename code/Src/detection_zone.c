@@ -38,7 +38,28 @@ uint8_t matrice_trigo[64] = {
 
 uint32_t environment_matrix[64];
 
-// Implémentation des fonctions
+/* Implémentation des fonctions */
+
+// Initialisation de la structure Animal
+void init_animal(Animal_t* animal) {
+    animal->vec_movement[0] = -1;
+    animal->vec_movement[1] = -1;
+    animal->distance_centre = -1;
+    animal->direction = -1;
+    animal->angle_direction = -1;
+}
+
+// Initialisation de la structure Detection Zone
+void init_detection_zone(DetectionZone_t* detect) {
+    detect->initialization = 0;
+    detect->acquisition = 0;
+    detect->capture = 0;
+    // detect->matrix_distance = {0};
+    detect->number_of_zones = 0;
+    detect->zones_per_line = 0;
+    detect->score = 0;
+    init_animal(&detect->animal);
+}
 
 // Converte the ranging sensor to a matrix 8x8
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect) {
@@ -220,8 +241,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         
         // Peut-être que cette étape n'est pas nécessaire
         // doit être fait dans le main qui appelle cette fonction quand celle-ci retourne CAPTURE
-        detect->acquisition == 0;
-        detect->capture == 0;
+        detect->acquisition = 0;
+        detect->capture = 0;
 
         return ACQUISITION;
     }
