@@ -296,7 +296,7 @@ void copy_detection_zone(DetectionZone_t* detect_pre, DetectionZone_t* detect_cu
     copy_matrix(detect_pre->matrix_distance, detect_cur->matrix_distance);
 }
 
-/* Fonction pou l'animal */
+/* Fonction pour le suivi de l'animal */
 
 // Calcul de la distance au centre
 int distance_centre(Animal_t* animal) {
