@@ -41,7 +41,7 @@ typedef enum {
 } Etat;
 
 // Structure pour le mouvement de l'animal : Edouard
-typedef struct  // ! structure de base, nom et type peut être modifié !
+typedef struct  // ! structure de base, nom et type peut être modifie !
 {
     // un vecteur mouvement entre deux cases
     int vec_movement[2];
