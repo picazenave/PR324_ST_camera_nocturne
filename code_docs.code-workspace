@@ -23,7 +23,11 @@
 			"main.h": "c",
 			"fatfs.h": "c",
 			"string.h": "c",
-			"stdio.h": "c"
+			"stdio.h": "c",
+			"custom_ranging_sensor.h": "c",
+			"custom_tof_conf.h": "c",
+			"stm32f4xx_nucleo_bus.h": "c",
+			"platform.h": "c"
 		}
 	}
 }
