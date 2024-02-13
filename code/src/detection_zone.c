@@ -116,6 +116,8 @@ int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur)
 
 int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
     int8_t find = -1;
+    DetectionZone_t detect_cur;
+    int distance_centre_pre;
     
     // Initialization, so no check and just register
     if (detect_pre->initialization != 1)
@@ -136,7 +138,6 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
     {
         printf("Acquisition\r\n");
 
-        DetectionZone_t detect_cur;
         sensor2matrix(pResult, zones_per_line, &detect_cur);
 
         find = check_evolution(detect_pre, &detect_cur);
@@ -149,9 +150,7 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
 
             detect_pre->acquisition = 1;
 
-            // voir la définition de la structure : Edouard
-
-            deplacement_animal(&detect_pre->animal, find);
+            detect_pre->animal.vec_movement[1] = find;
 
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect_pre, &detect_cur);
@@ -169,7 +168,6 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
     {
         printf("Following an animal\r\n");
 
-        DetectionZone_t detect_cur;
         sensor2matrix(pResult, zones_per_line, &detect_cur);
 
         find = check_evolution(detect_pre, &detect_cur);
@@ -180,22 +178,31 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
         {
             printf("An animal is in movement (@%d)\r\n", find);
 
+            distance_centre_pre = ;
+
             // mettre a jour la structure de l'animal : Edouard
             deplacement_animal(&detect_pre->animal, find);
 
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect_pre, &detect_cur);
 
-            // si l'animal se rapproche du centre et sa direction est OK alors on continue de la suivre
-            return ANIMAL;
-
             // si l'animal s'éloigne du centre et sa direction aussi alors on continue le capture
-            return CAPTURE;
+            if (distance_centre_pre < detect_pre->animal.distance_centre)
+            {
+                return CAPTURE;
+            }
+            // si l'animal se rapproche du centre et sa direction est OK alors on continue de la suivre
+            else
+            {
+                return ANIMAL;
+            }
+            
         }
         // The animal disappears
         else
         {
-            detect_pre->capture = 1;
+            detect_pre->acquisition = 0;
+            detect_pre->capture = 0;
 
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect_pre, &detect_cur);
@@ -286,16 +293,13 @@ void deplacement_animal(Animal_t* animal, int new_position) {
     animal->vec_movement[0] = animal->vec_movement[1];
     animal->vec_movement[1] = new_position;
 
-    if (animal->vec_movement[0] != -1)
-    {
-        // Calcul de la distance par rapport au centre
-        animal->distance_centre = matrice_centre[animal->vec_movement[1]]; // TODO avec une fonction
+    // Calcul de la distance par rapport au centre
+    animal->distance_centre = matrice_centre[animal->vec_movement[1]]; // TODO avec une fonction
 
-        // Calcul de son angle de direction
-        // ! Attention l'angle de direction est liée à la position !
-        animal->direction = 0; // TODO avec une fonction
-        animal->angle_direction = 0; // TODO avec une fonction
-    }
+    // Calcul de son angle de direction
+    // ! Attention l'angle de direction est liée à la position !
+    animal->direction = 0; // TODO avec une fonction
+    animal->angle_direction = 0; // TODO avec une fonction
 
     print_animal(animal);
 }
