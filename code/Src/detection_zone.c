@@ -119,7 +119,7 @@ int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur)
 // Check the comparaison and return a status
 int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
     int8_t find = -1;
-    Animal_t animal_find;
+    
 
     if (detect->initialization != 1)
     {
@@ -158,9 +158,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
             // voir la définition de la structure : Edouard
 
-            deplacement_animal(&animal_find, find);
-
-            detect->animal = animal_find;
+            deplacement_animal(&detect->animal, find);
 
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect, &detect_cur);
@@ -192,8 +190,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
             printf("An animal is in movement (@%d)\r\n", find);
 
             // mettre a jour la structure de l'animal : Edouard
-            // detect->animal->
-            deplacement_animal(&animal_find, find);
+            deplacement_animal(&detect->animal, find);
 
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect, &detect_cur);
@@ -223,6 +220,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         
         // Peut-être que cette étape n'est pas nécessaire
         // doit être fait dans le main qui appelle cette fonction quand celle-ci retourne CAPTURE
+        detect->acquisition == 0;
+        detect->capture == 0;
 
         return ACQUISITION;
     }
@@ -296,6 +295,7 @@ int distance_centre(Animal_t* animal) {
 // Mise à jour du déplacement de l'animal
 void deplacement_animal(Animal_t* animal, int new_position) {
 
+    
     // Mise à jour de la position N-1 et N
     animal->vec_movement[0] = animal->vec_movement[1];
     animal->vec_movement[1] = new_position;
