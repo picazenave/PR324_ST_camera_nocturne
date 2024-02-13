@@ -142,10 +142,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
     int8_t find = -1;
     
 
-    if (detect->initialization != 1)
+    if (detect->initialization != 1) // Initialization, so no check and just register
     {
-        // Initialization, so no check and just register
-
         printf("Initialization\r\n");
 
         sensor2matrix(pResult, zones_per_line, detect);
@@ -157,10 +155,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
         return INITIALISATION;
     }
-    else if (detect->initialization == 1 && detect->acquisition == 0)
+    else if (detect->initialization == 1 && detect->acquisition == 0) // Check the presence of an animal
     {
-        // Check the presence of an animal
-
         printf("Acquisition\r\n");
 
         DetectionZone_t detect_cur;
@@ -169,10 +165,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         find = check_evolution(detect, &detect_cur);
         printf("find = %d\r\n", find);
 
-        if (find != -1)
+        if (find != -1) // An animal is detected
         {
-            // An animal is detected
-
             printf("An animal is detected (@%d)\r\n", find);
 
             detect->acquisition = 1;
@@ -192,10 +186,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
         return ACQUISITION;
     }
-    else if (detect->initialization == 1 && detect->acquisition == 1)
+    else if (detect->initialization == 1 && detect->acquisition == 1) // Following the movement of the animal
     {
-        // Here we need to follow the movement of the animal : Edouard
-
         printf("Following an animal\r\n");
 
         DetectionZone_t detect_cur;
@@ -235,10 +227,8 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         }
 
     }
-    else if (detect->initialization == 1 && detect->acquisition == 1 && detect->capture == 1)
+    else if (detect->initialization == 1 && detect->acquisition == 1 && detect->capture == 1) // Reset and comeback in the acquisition process
     {
-        // Reset to comeback in the acquisition process :  Lilian
-        
         // Peut-être que cette étape n'est pas nécessaire
         // doit être fait dans le main qui appelle cette fonction quand celle-ci retourne CAPTURE
         detect->acquisition = 0;
@@ -246,7 +236,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
         return ACQUISITION;
     }
-    else
+    else // Error
     {
         printf("Error\r\n");
 
