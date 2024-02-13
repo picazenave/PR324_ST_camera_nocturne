@@ -38,7 +38,28 @@ uint8_t matrice_trigo[64] = {
 // Contiendra la toute 1ère matrice, celle de l'environnement face au capteur
 uint32_t environment_matrix[64];
 
-// Implémentation des fonctions
+/* Implémentation des fonctions */
+
+// Initialisation de la structure Animal
+void init_animal(Animal_t* animal) {
+    animal->vec_movement[0] = -1;
+    animal->vec_movement[1] = -1;
+    animal->distance_centre = -1;
+    animal->direction = -1;
+    animal->angle_direction = -1;
+}
+
+// Initialisation de la structure Detection Zone
+void init_detection_zone(DetectionZone_t* detect) {
+    detect->initialization = 0;
+    detect->acquisition = 0;
+    detect->capture = 0;
+    // detect->matrix_distance = {0};
+    detect->number_of_zones = 0;
+    detect->zones_per_line = 0;
+    detect->score = 0;
+    init_animal(&detect->animal);
+}
 
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect) {
     detect->zones_per_line = zones_per_line;
@@ -95,11 +116,10 @@ int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur)
 
 int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
     int8_t find = -1;
-
+    
+    // Initialization, so no check and just register
     if (detect_pre->initialization != 1)
     {
-        // Initialization, so no check and just register
-
         printf("Initialization\r\n");
 
         sensor2matrix(pResult, zones_per_line, detect_pre);
@@ -111,10 +131,9 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
 
         return INITIALISATION;
     }
+    // Check the presence of an animal
     else if (detect_pre->initialization == 1 && detect_pre->acquisition == 0)
     {
-        // Check the presence of an animal
-
         printf("Acquisition\r\n");
 
         DetectionZone_t detect_cur;
@@ -123,21 +142,15 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
         find = check_evolution(detect_pre, &detect_cur);
         printf("find = %d\r\n", find);
 
-        if (find != -1)
+        if (find != -1) // An animal is detected
         {
-            // An animal is detected
-
             printf("An animal is detected (@%d)\r\n", find);
 
             detect_pre->acquisition = 1;
 
             // voir la définition de la structure : Edouard
 
-            Animal_t animal_find;
-
-            deplacement_animal(&animal_find, find);
-
-            detect_pre->animal = animal_find;
+            deplacement_animal(&detect_pre->animal, find);
 
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect_pre, &detect_cur);
@@ -150,10 +163,9 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
 
         return ACQUISITION;
     }
+    // Following the movement of the animal
     else if (detect_pre->initialization == 1 && detect_pre->acquisition == 1)
     {
-        // Here we need to follow the movement of the animal : Edouard
-
         printf("Following an animal\r\n");
 
         DetectionZone_t detect_cur;
@@ -169,7 +181,7 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
             printf("An animal is in movement (@%d)\r\n", find);
 
             // mettre a jour la structure de l'animal : Edouard
-            // detect_pre->animal->
+            deplacement_animal(&detect_pre->animal, find);
 
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect_pre, &detect_cur);
@@ -193,16 +205,17 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
         }
 
     }
+    // Reset and comeback in the acquisition process
     else if (detect_pre->initialization == 1 && detect_pre->acquisition == 1 && detect_pre->capture == 1)
     {
-        // Reset to comeback in the acquisition process :  Lilian
-        
         // Peut-être que cette étape n'est pas nécessaire
         // doit être fait dans le main qui appelle cette fonction quand celle-ci retourne CAPTURE
+        detect_pre->acquisition = 0;
+        detect_pre->capture = 0;
 
         return ACQUISITION;
     }
-    else
+    else // Error
     {
         printf("Error\r\n");
 
@@ -270,6 +283,7 @@ int distance_centre(Animal_t* animal) {
 // Mise à jour du déplacement de l'animal
 void deplacement_animal(Animal_t* animal, int new_position) {
 
+    
     // Mise à jour de la position N-1 et N
     animal->vec_movement[0] = animal->vec_movement[1];
     animal->vec_movement[1] = new_position;
@@ -281,4 +295,14 @@ void deplacement_animal(Animal_t* animal, int new_position) {
     // ! Attention l'angle de direction est liée à la position !
     animal->direction = 0; // TODO avec une fonction
     animal->angle_direction = 0; // TODO avec une fonction
+
+    print_animal(animal);
+}
+
+void print_animal(Animal_t* animal) {
+    printf("Animal :\r\n");
+    printf("Position (N-1) : @%d  =>  Position (N) : @%d\r\n", animal->vec_movement[0], animal->vec_movement[1]);
+    printf("Distance au centre : %d\r\n", animal->distance_centre);
+    printf("Diretion : %d\r\n", animal->direction);
+    printf("Angle de direction : %d\r\n", animal->angle_direction);
 }

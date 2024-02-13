@@ -71,6 +71,9 @@ typedef struct
  * Initialization
  ****************/
 
+void init_animal(Animal_t* animal);
+void init_detection_zone(DetectionZone_t* detect);
+
 /**
  * @brief Place les distances mesurées dans une matrice
  * @param pResult        Ranging Sensor
@@ -134,8 +137,9 @@ void copy_matrix(uint32_t matrix8x8_dest[64], uint32_t matrix8x8_src[64]);
 void copy_detection_zone(DetectionZone_t* detect_dest, DetectionZone_t* detect_src);
 
 
-/* Fonction pou l'animal */
+/* Fonction pour l'animal */
 int distance_centre(Animal_t* animal);
 void deplacement_animal(Animal_t* animal, int new_position);
+void print_animal(Animal_t* animal);
 
 #endif // DETECTION_ZONE_H
