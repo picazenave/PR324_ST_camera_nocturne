@@ -35,12 +35,11 @@ uint8_t matrice_trigo[64] = {
     3, 3, 3, 3, 4, 4, 4, 4
 };
 
-
+// Contiendra la toute 1ère matrice, celle de l'environnement face au capteur
 uint32_t environment_matrix[64];
 
 // Implémentation des fonctions
 
-// Converte the ranging sensor to a matrix 8x8
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect) {
     detect->zones_per_line = zones_per_line;
     detect->number_of_zones = pResult->NumberOfZones;
@@ -71,28 +70,6 @@ void print_2_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]) {
     }
 }
 
-// Initialization of the first matrix (the environment matrix)
-void init_environment_matrix(DetectionZone_t* detect, uint32_t environment_matrix[64]) {
-    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
-        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
-            environment_matrix[j + k] = detect->matrix_distance[j + k];
-        }
-    }
-}
-
-// Do the a subtraction : matrix_difference = detect->matrix_distance - detect_n->matrix_distance
-void difference_matrix(DetectionZone_t* detect, DetectionZone_t* detect_n, uint32_t matrix_difference[64]) {
-    for (int j = 0; j < detect->number_of_zones; j += detect->zones_per_line) {
-        for (int k = (detect->zones_per_line - 1); k >= 0; k--) {
-            matrix_difference[j + k] = detect->matrix_distance[j + k] - detect_n->matrix_distance[j + k];
-            printf("| %4lu ", matrix_difference[j + k]);
-        }
-        printf("|\r\n");
-    }
-    printf("\r\n");
-}
-
-// Check if there is a movement in the matrix
 int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur) {
     detect_cur->score = 0;
     uint32_t min = RANGE_MAX;
@@ -116,26 +93,25 @@ int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur)
     return indice_min;
 }
 
-// Check the comparaison and return a status
-int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
+int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
     int8_t find = -1;
 
-    if (detect->initialization != 1)
+    if (detect_pre->initialization != 1)
     {
         // Initialization, so no check and just register
 
         printf("Initialization\r\n");
 
-        sensor2matrix(pResult, zones_per_line, detect);
-        print_matrix(detect->matrix_distance);
+        sensor2matrix(pResult, zones_per_line, detect_pre);
+        print_matrix(detect_pre->matrix_distance);
 
-        init_environment_matrix(detect, environment_matrix);
+        copy_matrix(environment_matrix, detect_pre->matrix_distance);
 
-        detect->initialization = 1;
+        detect_pre->initialization = 1;
 
         return INITIALISATION;
     }
-    else if (detect->initialization == 1 && detect->acquisition == 0)
+    else if (detect_pre->initialization == 1 && detect_pre->acquisition == 0)
     {
         // Check the presence of an animal
 
@@ -144,7 +120,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         DetectionZone_t detect_cur;
         sensor2matrix(pResult, zones_per_line, &detect_cur);
 
-        find = check_evolution(detect, &detect_cur);
+        find = check_evolution(detect_pre, &detect_cur);
         printf("find = %d\r\n", find);
 
         if (find != -1)
@@ -153,7 +129,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
             printf("An animal is detected (@%d)\r\n", find);
 
-            detect->acquisition = 1;
+            detect_pre->acquisition = 1;
 
             // voir la définition de la structure : Edouard
 
@@ -161,20 +137,20 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
 
             deplacement_animal(&animal_find, find);
 
-            detect->animal = animal_find;
+            detect_pre->animal = animal_find;
 
             // Mise à jour de la matrice N-1 par N
-            copy_detection_zone(detect, &detect_cur);
+            copy_detection_zone(detect_pre, &detect_cur);
 
             return ANIMAL;
         }
 
         // Mise à jour de la matrice N-1 par N
-        copy_detection_zone(detect, &detect_cur);
+        copy_detection_zone(detect_pre, &detect_cur);
 
         return ACQUISITION;
     }
-    else if (detect->initialization == 1 && detect->acquisition == 1)
+    else if (detect_pre->initialization == 1 && detect_pre->acquisition == 1)
     {
         // Here we need to follow the movement of the animal : Edouard
 
@@ -183,7 +159,7 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         DetectionZone_t detect_cur;
         sensor2matrix(pResult, zones_per_line, &detect_cur);
 
-        find = check_evolution(detect, &detect_cur);
+        find = check_evolution(detect_pre, &detect_cur);
         printf("find = %d\r\n", find);
 
         if (find != -1)
@@ -193,10 +169,10 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
             printf("An animal is in movement (@%d)\r\n", find);
 
             // mettre a jour la structure de l'animal : Edouard
-            // detect->animal->
+            // detect_pre->animal->
 
             // Mise à jour de la matrice N-1 par N
-            copy_detection_zone(detect, &detect_cur);
+            copy_detection_zone(detect_pre, &detect_cur);
 
             // si l'animal se rapproche du centre et sa direction est OK alors on continue de la suivre
             return ANIMAL;
@@ -208,16 +184,16 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
         {
             // The animal disappears
 
-            detect->capture = 1;
+            detect_pre->capture = 1;
 
             // Mise à jour de la matrice N-1 par N
-            copy_detection_zone(detect, &detect_cur);
+            copy_detection_zone(detect_pre, &detect_cur);
             
             return CAPTURE;
         }
 
     }
-    else if (detect->initialization == 1 && detect->acquisition == 1 && detect->capture == 1)
+    else if (detect_pre->initialization == 1 && detect_pre->acquisition == 1 && detect_pre->capture == 1)
     {
         // Reset to comeback in the acquisition process :  Lilian
         
@@ -235,7 +211,6 @@ int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zon
     
 }
 
-// Convert a distance matrix a evolution 
 void print_matrix_color(DetectionZone_t* detect_cur) {
     for (int j = 0; j < detect_cur->number_of_zones; j += detect_cur->zones_per_line) {
         for (int k = (detect_cur->zones_per_line - 1); k >= 0; k--) {
@@ -272,21 +247,20 @@ void print_matrix_color(DetectionZone_t* detect_cur) {
     }
 }
 
-void copy_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]) {
+void copy_matrix(uint32_t matrix8x8_dest[64], uint32_t matrix8x8_src[64]) {
     for (uint8_t j = 0; j < 64; j += 8) {
         for (int8_t k = (8 - 1); k >= 0; k--) {
-            matrix8x8_1[j + k] = matrix8x8_2[j + k];
+            matrix8x8_dest[j + k] = matrix8x8_src[j + k];
         }
     }
 }
 
-// Copy the DetectionZone_t structure "detect_cur" in the DetectionZone_t structure "detect"
-void copy_detection_zone(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur) {
-    detect_pre->score = detect_cur->score;
-    copy_matrix(detect_pre->matrix_distance, detect_cur->matrix_distance);
+void copy_detection_zone(DetectionZone_t* detect_dest, DetectionZone_t* detect_src) {
+    detect_dest->score = detect_src->score;
+    copy_matrix(detect_dest->matrix_distance, detect_src->matrix_distance);
 }
 
-/* Fonction pou l'animal */
+/*********************** Fonction pour l'animal ***********************/
 
 // Calcul de la distance au centre
 int distance_centre(Animal_t* animal) {
