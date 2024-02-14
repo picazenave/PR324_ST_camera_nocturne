@@ -31,6 +31,13 @@
 #define BG_CYAN    "\x1b[46m"
 #define BG_WHITE   "\x1b[47m"
 
+// Structure coordonnées
+typedef struct
+{
+    int8_t x;
+    int8_t y;
+} Coordonnees_t;
+
 // Etat du statut
 typedef enum {
     ERREUR = -1,

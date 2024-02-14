@@ -178,7 +178,7 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
         {
             printf("An animal is in movement (@%d)\r\n", find);
 
-            distance_centre_pre = ;
+            distance_centre_pre = detect_pre->animal.distance_centre;
 
             // mettre a jour la structure de l'animal : Edouard
             deplacement_animal(&detect_pre->animal, find);
