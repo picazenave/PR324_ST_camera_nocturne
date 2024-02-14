@@ -6,7 +6,7 @@
 // Contiendra la toute 1ère matrice, celle de l'environnement face au capteur
 uint32_t environment_matrix[64];
 
-struct Coordonnees trigonometric_matrix[64];
+Coordonnees_t trigonometric_matrix[64];
 
 /* Implémentation des fonctions */
 
@@ -29,34 +29,28 @@ void init_detection_zone(DetectionZone_t* detect) {
     init_animal(&detect->animal);
 }
 
-void init_trigonometric_matrix(struct Coordonnees trigonometric_matrix[64]) {
+void init_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]) {
     // Initialisation de la matrice avec les coordonnées
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            trigonometric_matrix[i * N + j].x = i - N / 2 + 1;
-            trigonometric_matrix[i * N + j].y = j - N / 2 + 1;
-        }
+    for (int i = 0; i < 64; i ++) {
+        trigonometric_matrix[i].y = i % N - N / 2;  // Utilisation de la division modulo pour obtenir les indices de colonnes
+        trigonometric_matrix[i].x = N / 2 - 1 - i / N;  // Utilisation de la division entière pour obtenir les indices de lignes et ajustement
     }
     
     int indiceCercle = 2;  // Indice du cercle trigonométrique
 
-    for (int i = 0; i < N * N; i++) {
+    for (int i = 0; i < 64; i ++) {
         // Calcul des nouvelles coordonnées en fonction du cercle trigonométrique
         double angle = (double)indiceCercle * 2 * M_PI / N;  // Conversion de l'indice en angle
-        double new_x = trigonometric_matrix[i].x * cos(angle) + trigonometric_matrix[i].y * sin(angle);
-        double new_y = trigonometric_matrix[i].y * cos(angle) - trigonometric_matrix[i].x * sin(angle);
+        double new_x = trigonometric_matrix[i].x * cos(angle) - trigonometric_matrix[i].y * sin(angle);
+        double new_y = trigonometric_matrix[i].y * cos(angle) + trigonometric_matrix[i].x * sin(angle);
+        
 
         // Arrondir les coordonnées pour obtenir des valeurs entières
         trigonometric_matrix[i].x = round(new_x);
         trigonometric_matrix[i].y = round(new_y);
     }
 
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            printf("(%2d, %2d) ", trigonometric_matrix[i * N + j].x, trigonometric_matrix[i * N + j].y);
-        }
-        printf("\n");
-    }
+    print_trigonometric_matrix(trigonometric_matrix);
 }
 
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect) {
@@ -84,6 +78,15 @@ void print_2_matrix(int32_t matrix8x8_1[64], int32_t matrix8x8_2[64]) {
         for (int8_t k = (8 - 1); k >= 0; k--) {
             printf("| %4ld ", matrix8x8_1[j + k]);
             printf("- %4ld ", matrix8x8_2[j + k]);
+        }
+        printf("|\r\n");
+    }
+}
+
+void print_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]) {
+    for (uint8_t j = 0; j < 64; j += 8) {
+        for (int8_t k = (8 - 1); k >= 0; k--) {
+            printf("(%2d, %2d) ", trigonometric_matrix[j + k].x, trigonometric_matrix[j + k].y);
         }
         printf("|\r\n");
     }
