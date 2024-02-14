@@ -2,6 +2,7 @@
 #define DETECTION_ZONE_H
 
 #include <stdint.h>
+#include <math.h>
 #include "custom_ranging_sensor.h"
 
 
@@ -11,6 +12,7 @@
 #define SEUIL_BRUIT       (5U) /* Le capteur détecte des distances différentes en étant immobile, on rajoute un seuil en % */
 #define SEUIL_BRUIT_PLUS  (1.f + (float)SEUIL_BRUIT/100.f)
 #define SEUIL_BRUIT_MOINS (1.f - (float)SEUIL_BRUIT/100.f)
+#define N 8  // Taille de la matrice (nombre de lignes et de colonnes)
 
 // Définition des couleurs
 #define BLACK      "\x1b[30m"
@@ -47,6 +49,14 @@ typedef enum {
     CAPTURE
 } Etat;
 
+
+// Structure pour représenter les coordonnées (x, y)
+struct Coordonnees {
+    int8_t x;
+    int8_t y;
+};
+
+
 // Structure pour le mouvement de l'animal : Edouard
 typedef struct  // ! structure de base, nom et type peut être modifie !
 {
@@ -80,6 +90,7 @@ typedef struct
 
 void init_animal(Animal_t* animal);
 void init_detection_zone(DetectionZone_t* detect);
+void init_trigonometric_matrix(struct Coordonnees trigonometric_matrix[64]);
 
 /**
  * @brief Place les distances mesurées dans une matrice
@@ -93,14 +104,14 @@ void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, Det
  * @brief Afficher une matrice 8x8
  * @param matrix8x8[64] une matrice 8x8
 */
-void print_matrix(uint32_t matrix8x8[64]);
+void print_matrix(int32_t matrix8x8[64]);
 
 /**
  * @brief Afficher deux matrices 8x8
  * @param matrix8x8_1[64] une matrice 8x8
  * @param matrix8x8_2[64] une matrice 8x8
 */
-void print_2_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]);
+void print_2_matrix(int32_t matrix8x8_1[64], int32_t matrix8x8_2[64]);
 
 /**
  * @brief Afficher une matrice en couleur en fonction de la distance
@@ -145,7 +156,6 @@ void copy_detection_zone(DetectionZone_t* detect_dest, DetectionZone_t* detect_s
 
 
 /* Fonction pour l'animal */
-int distance_centre(Animal_t* animal);
 void deplacement_animal(Animal_t* animal, int new_position);
 void print_animal(Animal_t* animal);
 
