@@ -35,12 +35,6 @@
 #define BG_CYAN    "\x1b[46m"
 #define BG_WHITE   "\x1b[47m"
 
-// Structure coordonnées
-typedef struct
-{
-    int8_t x;
-    int8_t y;
-} Coordonnees_t;
 
 // Etat du statut
 typedef enum {
@@ -50,6 +44,15 @@ typedef enum {
     ANIMAL,
     CAPTURE
 } Etat;
+
+
+// Structure pour représenter les coordonnées (x, y)
+typedef struct
+{
+    int8_t x;
+    int8_t y;
+} Coordonnees_t;
+
 
 // Structure pour le mouvement de l'animal : Edouard
 typedef struct 
@@ -108,6 +111,8 @@ void print_2_matrix(int32_t matrix8x8_1[64], int32_t matrix8x8_2[64]);
  * @param detect_cur une DetectionZone_t
 */
 void print_matrix_color(DetectionZone_t* detect_cur);
+
+void print_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]);
 
 /*************
  * Acquisition

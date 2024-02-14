@@ -62,12 +62,7 @@ void init_trigonometric_matrix(Coordonnees_t trigonometric_matrix[TAILLE_MATRICE
         trigonometric_matrix[i].y = round(new_y);
     }
 
-    for (int i = 0; i < LARGEUR_MATRICE; i++) {
-        for (int j = 0; j < LARGEUR_MATRICE; j++) {
-            printf("(%2d, %2d) ", trigonometric_matrix[i * LARGEUR_MATRICE + j].x, trigonometric_matrix[i * LARGEUR_MATRICE + j].y);
-        }
-        printf("\n");
-    }
+    print_trigonometric_matrix(trigonometric_matrix);
 }
 
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect) {
@@ -95,6 +90,15 @@ void print_2_matrix(int32_t matrix8x8_1[TAILLE_MATRICE], int32_t matrix8x8_2[TAI
         for (int8_t k = (8 - 1); k >= 0; k--) {
             printf("| %4ld ", matrix8x8_1[j + k]);
             printf("- %4ld ", matrix8x8_2[j + k]);
+        }
+        printf("|\r\n");
+    }
+}
+
+void print_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]) {
+    for (uint8_t j = 0; j < 64; j += 8) {
+        for (int8_t k = (8 - 1); k >= 0; k--) {
+            printf("(%2d, %2d) ", trigonometric_matrix[j + k].x, trigonometric_matrix[j + k].y);
         }
         printf("|\r\n");
     }
