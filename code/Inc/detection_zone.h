@@ -14,6 +14,9 @@
 #define SEUIL_BRUIT_MOINS (1.f - (float)SEUIL_BRUIT/100.f)
 #define N 8  // Taille de la matrice (nombre de lignes et de colonnes)
 
+#define ANGLE_MIN 0
+#define ANGLE_MAX 90
+
 // Définition des couleurs
 #define BLACK      "\x1b[30m"
 #define RED        "\x1b[31m"
@@ -57,10 +60,9 @@ typedef struct  // ! structure de base, nom et type peut être modifie !
     // un vecteur mouvement entre deux cases
     int vec_movement[2];
     // une distance par rapport au centre
-    int distance_centre;
+    int8_t distance_centre;
     // une direction avec son angle
-    int direction;
-    int angle_direction;
+    float angle_direction;
 
 } Animal_t;
 
@@ -152,7 +154,12 @@ void copy_detection_zone(DetectionZone_t* detect_dest, DetectionZone_t* detect_s
 
 
 /* Fonction pour l'animal */
-void deplacement_animal(Animal_t* animal, int new_position);
+
+int8_t calcul_distance_centre(Animal_t* animal);
+float calcul_angle_direction(int8_t x_a, int8_t y_a, int8_t x_b, int8_t y_b);
+int8_t calcul_zone(int8_t x_b, int8_t y_b);
+int8_t check_angle_degre(int8_t zone, float angle_direction_degres);
+int8_t deplacement_animal(Animal_t* animal, int new_position);
 void print_animal(Animal_t* animal);
 
 #endif // DETECTION_ZONE_H

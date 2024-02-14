@@ -14,7 +14,6 @@ void init_animal(Animal_t* animal) {
     animal->vec_movement[0] = -1;
     animal->vec_movement[1] = -1;
     animal->distance_centre = -1;
-    animal->direction = -1;
     animal->angle_direction = -1;
 }
 
@@ -88,7 +87,7 @@ void print_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]) {
         for (int8_t k = (8 - 1); k >= 0; k--) {
             printf("(%2d, %2d) ", trigonometric_matrix[j + k].x, trigonometric_matrix[j + k].y);
         }
-        printf("|\r\n");
+        printf("\r\n");
     }
 }
 
@@ -111,12 +110,13 @@ int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur)
             }
         }
     }
-    printf("Check evolution : find = %d (%4d)\r\n", indice_min, min);
+    printf("Check evolution : find = %d (%4ld)\r\n", indice_min, min);
     return indice_min;
 }
 
 int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line){
     int8_t find = -1;
+    int8_t status_animal = -1;
     DetectionZone_t detect_cur;
     int distance_centre_pre;
     
@@ -181,22 +181,23 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
             distance_centre_pre = detect_pre->animal.distance_centre;
 
             // mettre a jour la structure de l'animal : Edouard
-            deplacement_animal(&detect_pre->animal, find);
+            status_animal = deplacement_animal(&detect_pre->animal, find);
 
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect_pre, &detect_cur);
 
-            // si l'animal s'éloigne du centre et sa direction aussi alors on continue le capture
-            if (distance_centre_pre < detect_pre->animal.distance_centre)
-            {
-                return CAPTURE;
-            }
-            // si l'animal se rapproche du centre et sa direction est OK alors on continue de la suivre
-            else
-            {
-                return ANIMAL;
-            }
-            
+            return status_animal;
+
+            // // si l'animal s'éloigne du centre et sa direction aussi alors on continue le capture
+            // if (distance_centre_pre < detect_pre->animal.distance_centre)
+            // {
+            //     return CAPTURE;
+            // }
+            // // si l'animal se rapproche du centre et sa direction est OK alors on continue de la suivre
+            // else
+            // {
+            //     return ANIMAL;
+            // }
         }
         // The animal disappears
         else
@@ -226,7 +227,7 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
     {
         printf("Error\r\n");
 
-        return ERROR;
+        return ERREUR;
     }
     
 }
@@ -282,26 +283,144 @@ void copy_detection_zone(DetectionZone_t* detect_dest, DetectionZone_t* detect_s
 
 /*********************** Fonction pour l'animal ***********************/
 
-void deplacement_animal(Animal_t* animal, int new_position) {    
+int8_t calcul_distance_centre(Animal_t* animal) {
+    int8_t x = trigonometric_matrix[animal->vec_movement[1]].x;
+    int8_t y = trigonometric_matrix[animal->vec_movement[1]].y;
+    
+    if (abs(x) >= abs(y))
+        return abs(x);
+    return abs(y);
+}
+
+float calcul_angle(int8_t x_a, int8_t y_a, int8_t x_b, int8_t y_b) {
+    int8_t y_diff = y_b - y_a;
+    int8_t x_diff = x_b - x_a;
+
+    if (x_diff != 0)
+    {
+        float coeff_directeur = (float) y_diff / (float) x_diff;
+        float angle_direction = atan(coeff_directeur);
+
+        float angle_direction_degres = angle_direction * (180.0 / M_PI);
+
+        return angle_direction_degres;
+    }
+    else
+    {
+        return 90;
+    }
+}   
+
+int8_t calcul_zone(int8_t x_b, int8_t y_b) {
+    if (x_b < 1 && y_b > -1)
+    {
+        printf("Zone 1\r\n");
+        return 1;
+    }
+    else if (x_b > -1 && y_b > -1)
+    {
+        printf("Zone 2\r\n");
+        return 2;
+    }
+    else if (x_b > -1 && y_b < 0)
+    {
+        printf("Zone 3\r\n");
+        return 3;
+    }
+    else if (x_b < 1 && y_b < 0)
+    {
+        printf("Zone 4\r\n");
+        return 4;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+int8_t check_angle_degre(int8_t zone, float angle_direction_degres) {
+    switch (zone)
+    {
+    case 1:
+        if ((ANGLE_MIN <= (180 + angle_direction_degres)) && ((180 + angle_direction_degres) <= ANGLE_MAX))
+        {
+            return CAPTURE;
+        }
+        else
+        {
+            return ANIMAL;
+        }
+        break;
+    case 2:
+        if ((ANGLE_MIN <= angle_direction_degres) && (angle_direction_degres <= ANGLE_MAX))
+        {
+            return CAPTURE;
+        }
+        else
+        {
+            return ANIMAL;
+        }
+        break;
+    case 3:
+        if ((ANGLE_MIN <= (180 + angle_direction_degres)) && ((180 + angle_direction_degres) <= ANGLE_MAX))
+        {
+            return CAPTURE;
+        }
+        else
+        {
+            return ANIMAL;
+        }
+        break;
+    case 4:
+        if ((ANGLE_MIN <= angle_direction_degres) && (angle_direction_degres <= ANGLE_MAX))
+        {
+            return CAPTURE;
+        }
+        else
+        {
+            return ANIMAL;
+        }
+        break;
+    default:
+        return ERREUR;
+        break;
+    }
+}
+
+int8_t deplacement_animal(Animal_t* animal, int new_position) {    
     // Mise à jour de la position N-1 et N
     animal->vec_movement[0] = animal->vec_movement[1];
     animal->vec_movement[1] = new_position;
 
     // Calcul de la distance par rapport au centre
-    // animal->distance_centre = matrice_centre[animal->vec_movement[1]]; // TODO avec une fonction
+    animal->distance_centre = calcul_distance_centre(animal);
 
     // Calcul de son angle de direction
-    // ! Attention l'angle de direction est liée à la position !
-    animal->direction = 0; // TODO avec une fonction
-    animal->angle_direction = 0; // TODO avec une fonction
+    int8_t x_a = trigonometric_matrix[animal->vec_movement[0]].x;
+    int8_t y_a = trigonometric_matrix[animal->vec_movement[0]].y;
+    int8_t x_b = trigonometric_matrix[animal->vec_movement[1]].x;
+    int8_t y_b = trigonometric_matrix[animal->vec_movement[1]].y;
+
+    animal->angle_direction = calcul_angle(x_a, y_a, x_b, y_b);
+
+    int8_t zone = calcul_zone(x_b, y_b);
+
+    int8_t status = check_angle_degre(zone, animal->angle_direction);
 
     print_animal(animal);
+
+    // Affichage du résultat
+    printf("A (%2d, %2d), B (%2d, %2d)\r\n", x_a, y_a, x_b, y_b);
+    printf("Angle de direction (degrés) : %lf\r\n", animal->angle_direction);
+    printf("Zone : %d\r\n", zone);
+    printf("Status : %d\r\n", status);
+
+    return status;
 }
 
 void print_animal(Animal_t* animal) {
     printf("Animal :\r\n");
     printf("Position (N-1) : @%d  =>  Position (N) : @%d\r\n", animal->vec_movement[0], animal->vec_movement[1]);
     printf("Distance au centre : %d\r\n", animal->distance_centre);
-    printf("Diretion : %d\r\n", animal->direction);
-    printf("Angle de direction : %d\r\n", animal->angle_direction);
+    printf("Angle de direction : %f\r\n", animal->angle_direction);
 }

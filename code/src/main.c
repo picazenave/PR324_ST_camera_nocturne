@@ -153,19 +153,19 @@ int main(void)
     switch (status)
     {
     case INITIALISATION:
-      printf("ToF status : Initialisation\r\n");
+      printf(BLUE "ToF status : Initialisation\r\n" RESET);
       break;
     case ACQUISITION:
-      printf("ToF status : Search an animal\r\n");
+      printf(YELLOW "ToF status : Search an animal\r\n" RESET);
       break;
     case ANIMAL:
-      printf("ToF status : Following an animal\r\n");
+      printf(GREEN "ToF status : Following an animal\r\n" RESET);
       break;
     case CAPTURE:
-      printf("ToF status : Capture the animal\r\n");
+      printf(BG_WHITE "ToF status : Capture the animal\r\n" RESET);
       break;
     default:
-      printf("ToF status : Error\r\n");
+      printf(RED "ToF status : Error\r\n" RESET);
       break;
     }
     printf("******************************\r\n");
