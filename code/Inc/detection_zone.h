@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <math.h>
+#define M_PI 3.14159265358979323846
 #include "custom_ranging_sensor.h"
 
 
@@ -12,7 +13,8 @@
 #define SEUIL_BRUIT       (5U) /* Le capteur détecte des distances différentes en étant immobile, on rajoute un seuil en % */
 #define SEUIL_BRUIT_PLUS  (1.f + (float)SEUIL_BRUIT/100.f)
 #define SEUIL_BRUIT_MOINS (1.f - (float)SEUIL_BRUIT/100.f)
-#define N 8  // Taille de la matrice (nombre de lignes et de colonnes)
+#define LARGEUR_MATRICE   (8U)  // Taille de la matrice (nombre de lignes et de colonnes)
+#define TAILLE_MATRICE    LARGEUR_MATRICE*LARGEUR_MATRICE // Taille de la matrice, nombre d'éléments
 
 #define ANGLE_MIN 0
 #define ANGLE_MAX 90
@@ -36,6 +38,7 @@
 #define BG_CYAN    "\x1b[46m"
 #define BG_WHITE   "\x1b[47m"
 
+
 // Etat du statut
 typedef enum {
     ERREUR = -1,
@@ -55,23 +58,20 @@ typedef struct
 
 
 // Structure pour le mouvement de l'animal : Edouard
-typedef struct  // ! structure de base, nom et type peut être modifie !
-{
-    // un vecteur mouvement entre deux cases
-    int vec_movement[2];
-    // une distance par rapport au centre
-    int8_t distance_centre;
-    // une direction avec son angle
-    float angle_direction;
-
+typedef struct 
+{    
+    int vec_movement[2]; // un vecteur mouvement entre deux cases    
+    int distance_centre; // une distance par rapport au centre
+    int direction;       // une direction avec son angle
+    int angle_direction;
 } Animal_t;
 
 // Structure pour DetectionZone
 typedef struct
 {
-    int      initialization;
-    int      acquisition;
-    int      capture;
+    int8_t   initialization;
+    int8_t   acquisition;
+    int8_t   capture;
     uint32_t matrix_distance[64];
     uint32_t number_of_zones;
     uint8_t  zones_per_line;
