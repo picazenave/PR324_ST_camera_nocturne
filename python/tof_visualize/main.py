@@ -5,6 +5,8 @@ import serial
 import time
 import matplotlib.pyplot as plt
 from numpy import genfromtxt
+import signal
+import sys
 
 my_data = genfromtxt('C:/Users/pierr/Documents/GitHub/PR324_ST_camera_nocturne/python/tof_visualize/putty.log', delimiter=',')
 my_horodatage=my_data[:,:1]
@@ -47,7 +49,6 @@ is_tracking=False
 should_capture=True
 center_position_x=4
 center_position_y=4
-old_local_max_index=0
 local_max=0
 local_max_index=0
 
@@ -74,29 +75,41 @@ while(True):
 # compute
 #==================================================  
 #find closest pixel and exclude pixel too close to background
+    possible_target_index=np.zeros(64,dtype=np.int16)
+    possible_target_index_i=0
     treshold=100
     local_max=0
-    old_local_max_index=local_max_index
     local_max_index=0
+    local_min=2550
+    local_min_i=0
     distance_to_center=0
     is_tracking = False
+    #find all i that could be target
     for i in range(64):
         temp=abs(my_array_original[i]-background[i])
         if temp>treshold and my_status[counter][i] in valid_status and my_nbtarget[counter][i]>0:
-            if(temp>local_max):
-                local_max=temp
-                local_max_index=i
-                is_tracking=True
-
-    if(is_tracking): #compute distance to center
-        x=i-int(local_max_index/8)
-        y=int(local_max_index/8)
+            possible_target_index[possible_target_index_i]=i
+            possible_target_index_i=possible_target_index_i+1
+            is_tracking=True              
+                
+    old_local_min_index=local_min_i
+    if(is_tracking):
+        #now that we have a list of possible target index, compute closest to camera
+        for i in range(64):
+            if possible_target_index[i]==0:#at the end of list, should be -1 in C
+                break
+            if(my_array_original[possible_target_index[i]]<local_min):
+                local_min_i=possible_target_index[i]
+                local_min=my_array_original[possible_target_index[i]]
+        
+        #compute distance to center
+        x=i-int(local_min_i/8)
+        y=int(local_min_i/8)
         dx = (center_position_x-x)
         dy = (center_position_y-y)
         distance_to_center = math.sqrt(dx*dx + dy*dy)
 
         #angleInDegrees_center_to_p = math.atan2(dy, dx) * 180 / 3.141
-    print("distance_to_center"+str(distance_to_center)+"|is tracking="+str(is_tracking)+"|local_max="+str(local_max)+"|local_max_index="+str(local_max_index))
 #==================================================
 # Image part
 #==================================================            
@@ -129,14 +142,22 @@ while(True):
 # draw debug infos
 #==================================================  
     if(is_tracking):#BGR
-        i=old_local_max_index
+        #draw all possible target index
+        for i in range(64):
+            if possible_target_index[i]==0:#at the end of list, should be -1 in C
+                break
+            i=possible_target_index[i]
+            p= (int(square_size*i-int(i/8)*square_size*8)+int(square_size/2),int(int(i/8)*square_size+square_size/2)-20)
+            cv2.circle(resized,p, 50, (255,128,255), thickness=6, lineType=8, shift=0)
+
+        i=old_local_min_index
         p1= (int(square_size*i-int(i/8)*square_size*8)+int(square_size/2),int(int(i/8)*square_size+square_size/2)-20)
-        i=local_max_index
+        i=local_min_i
         p2= (int(square_size*i-int(i/8)*square_size*8)+int(square_size/2),int(int(i/8)*square_size+square_size/2)-20)
         i=4+4*8#center index
         p_center= (int(square_size*i-int(i/8)*square_size*8)+int(square_size/2),int(int(i/8)*square_size+square_size/2)-20)
         cv2.arrowedLine(resized,p_center,p2,(255,0,255),thickness=2, line_type=8, shift=0)
-        if(old_local_max_index!=0):
+        if(old_local_min_index!=0):
             cv2.arrowedLine(resized,p1,p2,(0,0,255),thickness=6, line_type=8, shift=0)
         cv2.circle(resized,p2, 50, (0,0,255), thickness=4, lineType=8, shift=0)
         font                   = cv2.FONT_HERSHEY_SIMPLEX
@@ -159,7 +180,7 @@ while(True):
 
     cv2.imshow(window_name, resized)
     cv2.waitKey(1)  # it's needed, but no problem, it won't pause/wait
-    time.sleep(0.05)
+    time.sleep(0.06)
     time_loop[counter]=time.time()-start
     counter=counter+1
     if counter == end_counter:
