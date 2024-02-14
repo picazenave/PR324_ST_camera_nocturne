@@ -2,11 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Matrice d'éloignement
+uint8_t distance_centre[TAILLE_MATRICE] = {
+    6, 5, 4, 3, 3, 4, 5, 6,
+    5, 4, 3, 2, 2, 3, 4, 5,
+    4, 3, 2, 1, 1, 2, 3, 4,
+    3, 2, 1, 0, 0, 1, 2, 3,
+    3, 2, 1, 0, 0, 1, 2, 3,
+    4, 3, 2, 1, 1, 2, 3, 4,
+    5, 4, 3, 2, 2, 3, 4, 5,
+    6, 5, 4, 3, 3, 4, 5, 6
+};
 
 // Contiendra la toute 1ère matrice, celle de l'environnement face au capteur
-uint32_t environment_matrix[64];
+uint32_t environment_matrix[TAILLE_MATRICE];
 
-struct Coordonnees trigonometric_matrix[64];
+Coordonnees_t trigonometric_matrix[TAILLE_MATRICE];
 
 /* Implémentation des fonctions */
 
@@ -29,20 +40,20 @@ void init_detection_zone(DetectionZone_t* detect) {
     init_animal(&detect->animal);
 }
 
-void init_trigonometric_matrix(struct Coordonnees trigonometric_matrix[64]) {
+void init_trigonometric_matrix(Coordonnees_t trigonometric_matrix[TAILLE_MATRICE]) {
     // Initialisation de la matrice avec les coordonnées
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            trigonometric_matrix[i * N + j].x = i - N / 2 + 1;
-            trigonometric_matrix[i * N + j].y = j - N / 2 + 1;
+    for (int i = 0; i < LARGEUR_MATRICE; i++) {
+        for (int j = 0; j < LARGEUR_MATRICE; j++) {
+            trigonometric_matrix[i * LARGEUR_MATRICE + j].x = i - LARGEUR_MATRICE / 2 + 1;
+            trigonometric_matrix[i * LARGEUR_MATRICE + j].y = j - LARGEUR_MATRICE / 2 + 1;
         }
     }
     
     int indiceCercle = 2;  // Indice du cercle trigonométrique
 
-    for (int i = 0; i < N * N; i++) {
+    for (int i = 0; i < LARGEUR_MATRICE * LARGEUR_MATRICE; i++) {
         // Calcul des nouvelles coordonnées en fonction du cercle trigonométrique
-        double angle = (double)indiceCercle * 2 * M_PI / N;  // Conversion de l'indice en angle
+        double angle = (double)indiceCercle * 2 * M_PI / LARGEUR_MATRICE;  // Conversion de l'indice en angle
         double new_x = trigonometric_matrix[i].x * cos(angle) + trigonometric_matrix[i].y * sin(angle);
         double new_y = trigonometric_matrix[i].y * cos(angle) - trigonometric_matrix[i].x * sin(angle);
 
@@ -51,9 +62,9 @@ void init_trigonometric_matrix(struct Coordonnees trigonometric_matrix[64]) {
         trigonometric_matrix[i].y = round(new_y);
     }
 
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            printf("(%2d, %2d) ", trigonometric_matrix[i * N + j].x, trigonometric_matrix[i * N + j].y);
+    for (int i = 0; i < LARGEUR_MATRICE; i++) {
+        for (int j = 0; j < LARGEUR_MATRICE; j++) {
+            printf("(%2d, %2d) ", trigonometric_matrix[i * LARGEUR_MATRICE + j].x, trigonometric_matrix[i * LARGEUR_MATRICE + j].y);
         }
         printf("\n");
     }
@@ -70,8 +81,8 @@ void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, Det
     }
 }
 
-void print_matrix(int32_t matrix8x8[64]) {
-    for (uint8_t j = 0; j < 64; j += 8) {
+void print_matrix(int32_t matrix8x8[TAILLE_MATRICE]) {
+    for (uint8_t j = 0; j < TAILLE_MATRICE; j += 8) {
         for (int8_t k = (8 - 1); k >= 0; k--) {
             printf("| %4ld ", matrix8x8[j+k]);
         }
@@ -79,8 +90,8 @@ void print_matrix(int32_t matrix8x8[64]) {
     }
 }
 
-void print_2_matrix(int32_t matrix8x8_1[64], int32_t matrix8x8_2[64]) {
-    for (uint8_t j = 0; j < 64; j += 8) {
+void print_2_matrix(int32_t matrix8x8_1[TAILLE_MATRICE], int32_t matrix8x8_2[TAILLE_MATRICE]) {
+    for (uint8_t j = 0; j < TAILLE_MATRICE; j += 8) {
         for (int8_t k = (8 - 1); k >= 0; k--) {
             printf("| %4ld ", matrix8x8_1[j + k]);
             printf("- %4ld ", matrix8x8_2[j + k]);
@@ -264,8 +275,8 @@ void print_matrix_color(DetectionZone_t* detect_cur) {
     }
 }
 
-void copy_matrix(uint32_t matrix8x8_dest[64], uint32_t matrix8x8_src[64]) {
-    for (uint8_t j = 0; j < 64; j += 8) {
+void copy_matrix(uint32_t matrix8x8_dest[TAILLE_MATRICE], uint32_t matrix8x8_src[TAILLE_MATRICE]) {
+    for (uint8_t j = 0; j < TAILLE_MATRICE; j += 8) {
         for (int8_t k = (8 - 1); k >= 0; k--) {
             matrix8x8_dest[j + k] = matrix8x8_src[j + k];
         }
@@ -284,9 +295,18 @@ void deplacement_animal(Animal_t* animal, int new_position) {
     animal->vec_movement[0] = animal->vec_movement[1];
     animal->vec_movement[1] = new_position;
 
-    // Calcul de la distance par rapport au centre
     // animal->distance_centre = matrice_centre[animal->vec_movement[1]]; // TODO avec une fonction
-
+    int8_t xa = trigonometric_matrix[animal->vec_movement[0]].x;
+    int8_t ya = trigonometric_matrix[animal->vec_movement[0]].y;
+    int8_t xb = trigonometric_matrix[animal->vec_movement[1]].x;
+    int8_t yb = trigonometric_matrix[animal->vec_movement[1]].y;
+    printf("xa = %d, ya = %d, xb = %d, yb = %d\n", xa, ya, xb, yb);
+    if (xb != xa)
+    {
+        float coeff_dir = (float)(yb-ya)/(xb-xa);
+        printf("Coefficient directeur = %2f, angle = %f\n", coeff_dir, atan(coeff_dir));        
+    }
+    
     // Calcul de son angle de direction
     // ! Attention l'angle de direction est liée à la position !
     animal->direction = 0; // TODO avec une fonction
