@@ -7,20 +7,26 @@ import matplotlib.pyplot as plt
 from numpy import genfromtxt
 
 my_data = genfromtxt('C:/Users/pierr/Documents/GitHub/PR324_ST_camera_nocturne/python/tof_visualize/putty.log', delimiter=',')
+my_horodatage=my_data[:,:1]
 my_status=my_data[:,65:]
-my_data=my_data[:,:64]
+my_data=my_data[:,1:65]
 my_data_original=my_data
 my_data=(my_data/(max(my_data[0])))*255
+    
+
+
+print("mean_fps="+str(1000/np.mean(np.abs(my_horodatage[:-1] - my_horodatage[1:]))))
 
 window_name='Tof matrix'
 
-# ser = serial.Serial('COM7', 1000000)
+# ser = serial.Serial('COM7', 2000000)
 # print(ser.name)
 # ser.reset_input_buffer()
 # ser.reset_output_buffer()
 
 
 cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+cv2.resizeWindow(window_name, 800 , 800)
 
 tof_matrix_size=8,8
 
@@ -31,7 +37,10 @@ time_loop=np.empty(end_counter)
 #init background
 background=np.empty(64,dtype=np.int16)
 for i in range(64):
-    background[i]=my_data_original[counter][i]
+    if(my_status[counter][i]==0 or my_status[counter][i]==5 or my_status[counter][i]==6 or my_status[counter][i]==9 or my_status[counter][i]==10 or my_status[counter][i]==12 or my_status[counter][i]==13):
+            background[i]=my_data_original[counter][i]
+    else:
+        background[i]=2550
 #init vars
 is_tracking=False
 should_capture=True
@@ -41,6 +50,8 @@ old_local_max_index=0
 local_max=0
 local_max_index=0
 
+valid_status=[1,2,3,4,5,6,7,8,9,10,11,12,13,255]
+valid_status = set(valid_status)
 while(True):
     start = time.time()
     # ser.write(b'\x55')
@@ -51,7 +62,8 @@ while(True):
     
     for i in range(64):
         my_array_original[i]=my_data_original[counter][i]
-        if(my_status[counter][i]==0):
+        #if(my_status[counter][i]==5 or my_status[counter][i]==6 or my_status[counter][i]==8 or my_status[counter][i]==9 or my_status[counter][i]==10 or my_status[counter][i]==12 or my_status[counter][i]==13 or my_status[counter][i]==13):
+        if(my_status[counter][i] in valid_status):
             my_array[i]=my_data[counter][i]
         else : #status bit set so problem
             my_array[i]=255
@@ -62,6 +74,7 @@ while(True):
 #==================================================  
 #find closest pixel and exclude pixel too close to background
     treshold=100
+    difference_max=1500 # to avoid default value being max
     local_max=0
     old_local_max_index=local_max_index
     local_max_index=0
@@ -69,7 +82,7 @@ while(True):
     is_tracking = False
     for i in range(64):
         temp=abs(my_array_original[i]-background[i])
-        if temp*(1-my_status[counter][i])>treshold:
+        if temp>treshold and temp<difference_max and my_status[counter][i] in valid_status:
             if(temp>local_max):
                 local_max=temp
                 local_max_index=i
@@ -82,7 +95,7 @@ while(True):
         dy = (center_position_y-y)
         distance_to_center = math.sqrt(dx*dx + dy*dy)
 
-        angleInDegrees_p1_to_p2 = math.atan2(dy, dx) * 180 / 3.141
+        #angleInDegrees_center_to_p = math.atan2(dy, dx) * 180 / 3.141
     print("distance_to_center"+str(distance_to_center)+"|is tracking="+str(is_tracking)+"|local_max="+str(local_max)+"|local_max_index="+str(local_max_index))
 #==================================================
 # Image part
@@ -115,11 +128,14 @@ while(True):
 #==================================================
 # draw debug infos
 #==================================================  
-    if(is_tracking):
+    if(is_tracking):#BGR
         i=old_local_max_index
         p1= (int(square_size*i-int(i/8)*square_size*8)+int(square_size/2),int(int(i/8)*square_size+square_size/2)-20)
         i=local_max_index
         p2= (int(square_size*i-int(i/8)*square_size*8)+int(square_size/2),int(int(i/8)*square_size+square_size/2)-20)
+        i=4+4*8#center index
+        p_center= (int(square_size*i-int(i/8)*square_size*8)+int(square_size/2),int(int(i/8)*square_size+square_size/2)-20)
+        cv2.arrowedLine(resized,p_center,p2,(255,0,255),thickness=2, line_type=8, shift=0)
         if(old_local_max_index!=0):
             cv2.arrowedLine(resized,p1,p2,(0,0,255),thickness=6, line_type=8, shift=0)
         cv2.circle(resized,p2, 50, (0,0,255), thickness=4, lineType=8, shift=0)
@@ -143,7 +159,7 @@ while(True):
 
     cv2.imshow(window_name, resized)
     cv2.waitKey(1)  # it's needed, but no problem, it won't pause/wait
-    time.sleep(0.2)
+    time.sleep(0.07)
     time_loop[counter]=time.time()-start
     counter=counter+1
     if counter == end_counter:

@@ -55,6 +55,7 @@
 /* USER CODE BEGIN PV */
 volatile uint8_t uart2_tx_done = 0;
 volatile uint8_t uart1_rx_done = 0;
+volatile uint16_t ext_it = 0;
 
 struct img_struct_t img_struct = {.img_buffer = {0}, .img_len = 0};
 /* USER CODE END PV */
@@ -113,7 +114,8 @@ int main(void)
   // I2C reset pins set to Low,
   HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
   MX_VL53L5CX_ToF_Init();
-
+  
+#if 0
   HAL_StatusTypeDef status = HAL_ERROR;
 
   status = camera_init(0); // 0 not default config
@@ -134,6 +136,7 @@ int main(void)
   status = send_jpg_uart2(&img_struct);
   CHECK_HAL_STATUS_OR_PRINT(status);
   printf("\r\n\r\n DONE  \r\n");
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -222,6 +225,11 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  ext_it=GPIO_Pin;
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART1)
