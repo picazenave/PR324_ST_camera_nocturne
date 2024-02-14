@@ -101,11 +101,12 @@ int main(void)
   MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
- // MX_I2C1_Init();
+  MX_I2C1_Init();
   MX_SPI1_Init();
   MX_FATFS_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+#if 0
   /* Initialize the VL53L5CX sensor */
   HAL_GPIO_WritePin(TOF_PWR_EN_GPIO_Port, TOF_PWR_EN_Pin, GPIO_PIN_SET);
   // LPn pins set to High,
@@ -173,6 +174,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
   }
+  #endif
   /* USER CODE END 3 */
 }
 
