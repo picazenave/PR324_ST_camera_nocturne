@@ -70,15 +70,16 @@ extern "C"
 
     // Profile.RangingProfile = RS_PROFILE_4x4_CONTINUOUS;
     Profile.RangingProfile = RS_PROFILE_8x8_CONTINUOUS;
-    Profile.TimingBudget = 30; // TIMING_BUDGET;
-    Profile.Frequency = 5;    // RANGING_FREQUENCY; /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
+    Profile.TimingBudget = 50;  //TIMING_BUDGET;
+    Profile.Frequency = 15;    // RANGING_FREQUENCY; /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
     Profile.EnableAmbient = 0; /* Enable: 1, Disable: 0 */
     Profile.EnableSignal = 0;  /* Enable: 1, Disable: 0 */
 
     /* set the profile if different from default one */
     CUSTOM_RANGING_SENSOR_ConfigProfile(CUSTOM_VL53L5CX, &Profile);
 
-    status = CUSTOM_RANGING_SENSOR_Start(CUSTOM_VL53L5CX, RS_MODE_BLOCKING_CONTINUOUS);
+
+    status = CUSTOM_RANGING_SENSOR_Start(CUSTOM_VL53L5CX, VL53L5CX_MODE_BLOCKING_CONTINUOUS);
 
     while (1)
     {
@@ -99,6 +100,8 @@ extern "C"
         printf("%ld,",HAL_GetTick());
         for (uint8_t i = 0; i < 64; i++)
           printf("%ld,", (uint32_t)Result.ZoneResult[i].Distance[0]);
+        for (uint8_t i = 0; i < 64; i++)
+          printf("%ld,", (uint32_t)Result.ZoneResult[i].NumberOfTargets);
 
         for (uint8_t i = 0; i < 63; i++) // print status
           printf("%ld,", (uint32_t)Result.ZoneResult[i].Status[0]);
@@ -106,7 +109,7 @@ extern "C"
       }
       else
       {
-        printf("ranging status error \r\n");
+        printf("ranging status error status=%ld\r\n",status);
         return -1;
       }
 

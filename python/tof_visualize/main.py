@@ -8,7 +8,8 @@ from numpy import genfromtxt
 
 my_data = genfromtxt('C:/Users/pierr/Documents/GitHub/PR324_ST_camera_nocturne/python/tof_visualize/putty.log', delimiter=',')
 my_horodatage=my_data[:,:1]
-my_status=my_data[:,65:]
+my_nbtarget=my_data[:,65:129]
+my_status=my_data[:,129:]
 my_data=my_data[:,1:65]
 my_data_original=my_data
 my_data=(my_data/(max(my_data[0])))*255
@@ -50,7 +51,7 @@ old_local_max_index=0
 local_max=0
 local_max_index=0
 
-valid_status=[1,2,3,4,5,6,7,8,9,10,11,12,13,255]
+valid_status=[5,9]
 valid_status = set(valid_status)
 while(True):
     start = time.time()
@@ -63,7 +64,7 @@ while(True):
     for i in range(64):
         my_array_original[i]=my_data_original[counter][i]
         #if(my_status[counter][i]==5 or my_status[counter][i]==6 or my_status[counter][i]==8 or my_status[counter][i]==9 or my_status[counter][i]==10 or my_status[counter][i]==12 or my_status[counter][i]==13 or my_status[counter][i]==13):
-        if(my_status[counter][i] in valid_status):
+        if(my_status[counter][i] in valid_status and my_nbtarget[counter][i]>0):
             my_array[i]=my_data[counter][i]
         else : #status bit set so problem
             my_array[i]=255
@@ -74,7 +75,6 @@ while(True):
 #==================================================  
 #find closest pixel and exclude pixel too close to background
     treshold=100
-    difference_max=1500 # to avoid default value being max
     local_max=0
     old_local_max_index=local_max_index
     local_max_index=0
@@ -82,7 +82,7 @@ while(True):
     is_tracking = False
     for i in range(64):
         temp=abs(my_array_original[i]-background[i])
-        if temp>treshold and temp<difference_max and my_status[counter][i] in valid_status:
+        if temp>treshold and my_status[counter][i] in valid_status and my_nbtarget[counter][i]>0:
             if(temp>local_max):
                 local_max=temp
                 local_max_index=i
@@ -159,7 +159,7 @@ while(True):
 
     cv2.imshow(window_name, resized)
     cv2.waitKey(1)  # it's needed, but no problem, it won't pause/wait
-    time.sleep(0.07)
+    time.sleep(0.05)
     time_loop[counter]=time.time()-start
     counter=counter+1
     if counter == end_counter:
