@@ -19,7 +19,7 @@ uint32_t environment_matrix[TAILLE_MATRICE];
 
 Coordonnees_t trigonometric_matrix[TAILLE_MATRICE];
 
-/* Implémentation des fonctions */
+/*********************** Fonction d'initialization ***********************/
 
 void init_animal(Animal_t* animal) {
     animal->vec_movement[0] = -1;
@@ -75,6 +75,8 @@ void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, Det
     }
 }
 
+/*********************** Fonction d'affichage ***********************/
+
 void print_matrix(int32_t matrix8x8[TAILLE_MATRICE]) {
     for (uint8_t j = 0; j < TAILLE_MATRICE; j += 8) {
         for (int8_t k = (8 - 1); k >= 0; k--) {
@@ -102,6 +104,8 @@ void print_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]) {
         printf("\r\n");
     }
 }
+
+/*********************** Fonction d'acquisition ***********************/
 
 int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur) {
     detect_cur->score = 0;
@@ -168,7 +172,7 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
             // Mise à jour de la matrice N-1 par N
             copy_detection_zone(detect_pre, &detect_cur);
 
-            return ANIMAL;
+            return CAPTURE;
         }
 
         // Mise à jour de la matrice N-1 par N

@@ -149,7 +149,6 @@ int main(void)
     // HAL_Delay(10);
     tick_count++;
     int status = MX_VL53L5CX_ToF_Process(&detect);
-    printf("******************************\r\n");
     switch (status)
     {
     case INITIALISATION:

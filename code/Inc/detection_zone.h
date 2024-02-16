@@ -63,7 +63,7 @@ typedef struct
     int vec_movement[2]; // un vecteur mouvement entre deux cases    
     int distance_centre; // une distance par rapport au centre
     int direction;       // une direction avec son angle
-    int angle_direction;
+    float angle_direction;
 } Animal_t;
 
 // Structure pour DetectionZone
@@ -95,6 +95,10 @@ void init_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]);
  * @param detect         Détection de zone
 */
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect);
+
+/*************
+ * Affichage
+ *************/
 
 /**
  * @brief Afficher une matrice 8x8

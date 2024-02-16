@@ -53,7 +53,7 @@ void MX_VL53L5CX_ToF_Init(void)
 
   if (status != BSP_ERROR_NONE)
   {
-    printf("CUSTOM_RANGING_SENSOR_Init failed, status=0x%.2X,%d\n",status,status);
+    printf("CUSTOM_RANGING_SENSOR_Init failed, status=0x%.2lX,%ld\n",status,status);
     while (1);
   }
 }
