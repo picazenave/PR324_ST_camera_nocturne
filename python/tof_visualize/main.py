@@ -8,6 +8,13 @@ from numpy import genfromtxt
 import signal
 import sys
 
+from enum import Enum
+class Season(Enum):
+    SPRING = 1
+    SUMMER = 2
+    AUTUMN = 3
+    WINTER = 4
+
 my_data = genfromtxt('C:/Users/pierr/Documents/GitHub/PR324_ST_camera_nocturne/python/tof_visualize/putty.log', delimiter=',')
 my_horodatage=my_data[:,:1]
 my_nbtarget=my_data[:,65:129]
@@ -15,6 +22,54 @@ my_status=my_data[:,129:]
 my_data=my_data[:,1:65]
 my_data_original=my_data
 my_data=(my_data/(max(my_data[0])))*255
+
+
+#make include file for pre-calculated values
+valid_status=[5,9]
+valid_status = set(valid_status)
+computed_data=np.empty_like(my_data_original)
+for counter in range(len(my_data_original)):
+    for i in range(64):
+        #if(my_status[counter][i]==5 or my_status[counter][i]==6 or my_status[counter][i]==8 or my_status[counter][i]==9 or my_status[counter][i]==10 or my_status[counter][i]==12 or my_status[counter][i]==13 or my_status[counter][i]==13):
+        if(my_status[counter][i] in valid_status and my_nbtarget[counter][i]>0):
+            computed_data[counter][i]=my_data_original[counter][i]
+        else : #status bit set so problem
+            computed_data[counter][i]=2550
+
+x_gen=range(8)
+y_gen=range(8)
+center_position_x=4
+center_position_y=4
+
+with open('temp/auto_gen.h', 'w+') as outfile:
+    outfile.write("#ifndef auto_gen_h\n#define auto_gen_h\n\n")
+    outfile.write("#include \"main.h\"\n\n")
+    #write pre computed distances
+    outfile.write("float distance_matrix[64] = {")
+    for x in x_gen:
+        outfile.write("\n")
+        for y in y_gen:
+            #x=x-(int(x/8)*8)
+            #y=int(y/8)
+            dx = (center_position_x-x)
+            dy = (center_position_y-y)
+            distance_to_center = math.sqrt(dx*dx + dy*dy)
+            outfile.write("{:.5f},".format(distance_to_center))
+    outfile.write("};\n")
+    
+    #write raw TOF data
+    outfile.write("uint16_t distance_matrix[{size}]".format(size=(len(computed_data)*64))+" = {")
+    for i in range(len(computed_data)):
+        outfile.write("\n")
+        for j in range(64):
+            outfile.write("{value},".format(value=computed_data[i,j]))
+    outfile.write("};\n")
+
+    
+
+    outfile.write("\n#endif\n")
+
+
     
 
 
@@ -47,13 +102,8 @@ for i in range(64):
 #init vars
 is_tracking=False
 should_capture=True
-center_position_x=4
-center_position_y=4
 local_max=0
 local_max_index=0
-
-valid_status=[5,9]
-valid_status = set(valid_status)
 while(True):
     start = time.time()
     # ser.write(b'\x55')
