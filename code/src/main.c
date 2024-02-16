@@ -140,6 +140,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   DetectionZone_t detect={.acquisition=0,.capture=0,.initialization=0};
   uint32_t tick_count = 0;
+  char* name_capture;
+  
   while (1)
   {
     // HAL_Delay(300);
@@ -149,23 +151,27 @@ int main(void)
     // HAL_Delay(10);
     tick_count++;
     int status = MX_VL53L5CX_ToF_Process(&detect);
-    printf("******************************\r\n");
     switch (status)
     {
     case INITIALISATION:
-      printf("ToF status : Initialisation\r\n");
+      printf(BLUE "ToF status : Initialisation\r\n" RESET);
       break;
     case ACQUISITION:
-      printf("ToF status : Search an animal\r\n");
+      printf(YELLOW "ToF status : Search an animal\r\n" RESET);
       break;
     case ANIMAL:
-      printf("ToF status : Following an animal\r\n");
+      printf(GREEN "ToF status : Following an animal\r\n" RESET);
       break;
     case CAPTURE:
-      printf("ToF status : Capture the animal\r\n");
+      printf(BG_RED "ToF status : Capture the animal\r\n" RESET);
+      name_capture = info_capture(&detect);
+      printf("------------------------------\r\n");
+      printf("Capture sauvegardée : %s\r\n", name_capture);
+      printf("------------------------------\r\n");
+      free(name_capture);
       break;
     default:
-      printf("ToF status : Error\r\n");
+      printf(RED "ToF status : Error\r\n" RESET);
       break;
     }
     printf("******************************\r\n");

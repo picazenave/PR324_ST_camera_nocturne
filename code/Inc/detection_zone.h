@@ -2,6 +2,8 @@
 #define DETECTION_ZONE_H
 
 #include <stdint.h>
+#include <math.h>
+#define M_PI 3.14159265358979323846
 #include "custom_ranging_sensor.h"
 
 
@@ -11,6 +13,11 @@
 #define SEUIL_BRUIT       (5U) /* Le capteur détecte des distances différentes en étant immobile, on rajoute un seuil en % */
 #define SEUIL_BRUIT_PLUS  (1.f + (float)SEUIL_BRUIT/100.f)
 #define SEUIL_BRUIT_MOINS (1.f - (float)SEUIL_BRUIT/100.f)
+#define LARGEUR_MATRICE   (8U)  // Taille de la matrice (nombre de lignes et de colonnes)
+#define TAILLE_MATRICE    LARGEUR_MATRICE*LARGEUR_MATRICE // Taille de la matrice, nombre d'éléments
+
+#define ANGLE_MIN 0
+#define ANGLE_MAX 90
 
 // Définition des couleurs
 #define BLACK      "\x1b[30m"
@@ -31,6 +38,7 @@
 #define BG_CYAN    "\x1b[46m"
 #define BG_WHITE   "\x1b[47m"
 
+
 // Etat du statut
 typedef enum {
     ERREUR = -1,
@@ -40,25 +48,30 @@ typedef enum {
     CAPTURE
 } Etat;
 
-// Structure pour le mouvement de l'animal : Edouard
-typedef struct  // ! structure de base, nom et type peut être modifié !
-{
-    // un vecteur mouvement entre deux cases
-    int vec_movement[2];
-    // une distance par rapport au centre
-    int distance_centre;
-    // une direction avec son angle
-    int direction;
-    int angle_direction;
 
+// Structure pour représenter les coordonnées (x, y)
+typedef struct
+{
+    int8_t x;
+    int8_t y;
+} Coordonnees_t;
+
+
+// Structure pour le mouvement de l'animal : Edouard
+typedef struct 
+{    
+    int vec_movement[2]; // un vecteur mouvement entre deux cases    
+    int distance_centre; // une distance par rapport au centre
+    int direction;       // une direction avec son angle
+    float angle_direction;
 } Animal_t;
 
 // Structure pour DetectionZone
 typedef struct
 {
-    int      initialization;
-    int      acquisition;
-    int      capture;
+    int8_t   initialization;
+    int8_t   acquisition;
+    int8_t   capture;
     uint32_t matrix_distance[64];
     uint32_t number_of_zones;
     uint8_t  zones_per_line;
@@ -71,50 +84,89 @@ typedef struct
  * Initialization
  ****************/
 
+void init_animal(Animal_t* animal);
+void init_detection_zone(DetectionZone_t* detect);
+void init_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]);
+
 /**
+ * @brief Place les distances mesurées dans une matrice
  * @param pResult        Ranging Sensor
  * @param zones_per_line nombre de zone par ligne
  * @param detect         Détection de zone
 */
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect);
-void init_environment_matrix(DetectionZone_t* detect, uint32_t environment_matix[64]);
+
+/*************
+ * Affichage
+ *************/
 
 /**
  * @brief Afficher une matrice 8x8
  * @param matrix8x8[64] une matrice 8x8
 */
-void print_matrix(uint32_t matrix8x8[64]);
+void print_matrix(int32_t matrix8x8[64]);
 
 /**
  * @brief Afficher deux matrices 8x8
  * @param matrix8x8_1[64] une matrice 8x8
  * @param matrix8x8_2[64] une matrice 8x8
 */
-void print_2_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]);
+void print_2_matrix(int32_t matrix8x8_1[64], int32_t matrix8x8_2[64]);
+
+/**
+ * @brief Afficher une matrice en couleur en fonction de la distance
+ * @param detect_cur une DetectionZone_t
+*/
 void print_matrix_color(DetectionZone_t* detect_cur);
+
+void print_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]);
 
 /*************
  * Acquisition
  *************/
 
 /**
- * @brief Check l'évolution entre deux matrices
+ * @brief Check l'évolution entre deux matrices en gérant la bruit
  * @param detect matrice n-1
  * @param detect_n matrice n
  * @retval l'indice minimum ou -1 en cas d'erreur
 */
 int8_t check_evolution(DetectionZone_t* detect, DetectionZone_t* detect_n);
-int check(DetectionZone_t* detect, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line);
 
-/* Copy a struct in other struct */
-void copy_matrix(uint32_t matrix8x8_1[64], uint32_t matrix8x8_2[64]);
-void copy_detection_zone(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur);
+/**
+ * @brief Séquencement du capteur
+ * @param detect zone de détection
+ * @param pResult ranging_sensor
+ * @param zones_per_line nombre de zone par ligne (ici 8)
+ * @return le statut du capteur
+*/
+int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line);
 
-/* Not use but may be use later */
-void difference_matrix(DetectionZone_t* detect, DetectionZone_t* detect_n, uint32_t matrix_difference[64]);
+/**
+ * @brief Copie une matrice dans une autre
+ * @param matrix8x8_dest reçoit la nouvelle matrice
+ * @param matrix8x8_src matrice copiée
+*/
+void copy_matrix(uint32_t matrix8x8_dest[64], uint32_t matrix8x8_src[64]);
 
-/* Fonction pou l'animal */
-int distance_centre(Animal_t* animal);
-void deplacement_animal(Animal_t* animal, int new_position);
+/**
+ * @brief Copie de la matrice + score (N vers N-1)
+ * @param detect_dest Zone de détection N-1
+ * @param detect_src Zone de détection N
+*/
+void copy_detection_zone(DetectionZone_t* detect_dest, DetectionZone_t* detect_src);
+
+
+/* Fonction pour l'animal */
+
+int8_t calcul_distance_centre(Animal_t* animal);
+float calcul_angle_direction(int8_t x_a, int8_t y_a, int8_t x_b, int8_t y_b);
+int8_t calcul_zone(int8_t x_b, int8_t y_b);
+int8_t check_angle_degre(int8_t zone, float angle_direction_degres);
+int8_t deplacement_animal(Animal_t* animal, int new_position);
+void print_animal(Animal_t* animal);
+
+
+char* info_capture(DetectionZone_t* detect_pre);
 
 #endif // DETECTION_ZONE_H
