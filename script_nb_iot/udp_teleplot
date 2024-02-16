@@ -2,9 +2,8 @@ at#sleepmode=0
 at+cgpaddr=5
 // prendre l'addresse return
 at#ipcfg=5,0,10.174.68.195
-AT#IPSENDUDP=5,0,<90.50.33.140>,20001,0,0,myValue:1234
-AT#IPSENDUDP=5,0,<teleplot.fr>,20001,0,0,myValue:1234
-at#socketcreate=5,0,UDP,20001,5,1,0
+AT#IPSENDUDP=5,0,90.50.33.140,20001,0,0,myValue:1234
+at#socketcreate=5,0,UDP,20001,1,1,1
 
 20001
 8090
