@@ -33,6 +33,7 @@
 #include "camera.h"
 #include "detection_zone.h"
 #include "app_tof.h"
+#include "pir_lum.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
