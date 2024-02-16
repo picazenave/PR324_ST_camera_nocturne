@@ -140,6 +140,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   DetectionZone_t detect={.acquisition=0,.capture=0,.initialization=0};
   uint32_t tick_count = 0;
+  char* name_capture;
+
   while (1)
   {
     // HAL_Delay(300);
@@ -161,7 +163,12 @@ int main(void)
       printf(GREEN "ToF status : Following an animal\r\n" RESET);
       break;
     case CAPTURE:
-      printf(BG_WHITE "ToF status : Capture the animal\r\n" RESET);
+      printf(BG_RED "ToF status : Capture the animal\r\n" RESET);
+      name_capture = print_info_capture(&detect);
+      printf("------------------------------\r\n");
+      printf("Capture sauvegardée : %s\r\n", name_capture);
+      printf("------------------------------\r\n");
+      free(name_capture);
       break;
     default:
       printf(RED "ToF status : Error\r\n" RESET);

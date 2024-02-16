@@ -134,7 +134,6 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
     int8_t find = -1;
     int8_t status_animal = -1;
     DetectionZone_t detect_cur;
-    int distance_centre_pre;
     
     // Initialization, so no check and just register
     if (detect_pre->initialization != 1)
@@ -194,8 +193,6 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
         {
             printf("An animal is in movement (@%d)\r\n", find);
 
-            distance_centre_pre = detect_pre->animal.distance_centre;
-
             // mettre a jour la structure de l'animal : Edouard
             status_animal = deplacement_animal(&detect_pre->animal, find);
 
@@ -203,17 +200,6 @@ int check(DetectionZone_t* detect_pre, RANGING_SENSOR_Result_t *pResult, uint8_t
             copy_detection_zone(detect_pre, &detect_cur);
 
             return status_animal;
-
-            // // si l'animal s'éloigne du centre et sa direction aussi alors on continue le capture
-            // if (distance_centre_pre < detect_pre->animal.distance_centre)
-            // {
-            //     return CAPTURE;
-            // }
-            // // si l'animal se rapproche du centre et sa direction est OK alors on continue de la suivre
-            // else
-            // {
-            //     return ANIMAL;
-            // }
         }
         // The animal disappears
         else
@@ -440,3 +426,30 @@ void print_animal(Animal_t* animal) {
     printf("Distance au centre : %d\r\n", animal->distance_centre);
     printf("Angle de direction : %f\r\n", animal->angle_direction);
 }
+
+char* print_info_capture(DetectionZone_t* detect_pre) {
+    // printf("------------------------------\r\n");
+    // printf("Capture de l'animal :\r\n");
+    // printf("Score de la matrice ToF : %d\r\n", detect_pre->score);
+    // printf("Position de l'animal : %d\r\n", detect_pre->animal.vec_movement[0]);
+    // printf("Distance au centre : %d\r\n", detect_pre->animal.distance_centre);
+
+    char name_capture[100];
+    
+    sprintf(name_capture, "capture_@%d_%ldmm_%d.png",
+            detect_pre->animal.vec_movement[0],
+            detect_pre->matrix_distance[detect_pre->animal.vec_movement[0]],
+            detect_pre->score);
+
+    // printf("Nom de la capture : %s\r\n", name_capture);
+    // printf("------------------------------\r\n");
+
+    // return name_capture;
+    char* copy_capture = strdup(name_capture);
+    return copy_capture;
+}
+
+/*
+capture_position_positionmatrice_distancecentre_score.png
+*/
+

@@ -166,4 +166,7 @@ int8_t check_angle_degre(int8_t zone, float angle_direction_degres);
 int8_t deplacement_animal(Animal_t* animal, int new_position);
 void print_animal(Animal_t* animal);
 
+
+char* print_info_capture(DetectionZone_t* detect_pre);
+
 #endif // DETECTION_ZONE_H
