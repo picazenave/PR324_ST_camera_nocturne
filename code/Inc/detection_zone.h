@@ -84,15 +84,29 @@ typedef struct
  * Initialization
  ****************/
 
+/**
+ * @brief Initialise les variables de la structure animal
+ * @param animal structure de animal
+*/
 void init_animal(Animal_t* animal);
+
+/**
+ * @brief Initialise les variables de la structure detection de zone
+ * @param detect structure detection de zone
+*/
 void init_detection_zone(DetectionZone_t* detect);
+
+/**
+ * @brief Initialise une matrice trigonométrique de structure coordonnées x et y
+ * @param trigonometric_matrix[64] une matrice 8x8 de structure coordonnées x et y
+*/
 void init_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]);
 
 /**
  * @brief Place les distances mesurées dans une matrice
- * @param pResult        Ranging Sensor
+ * @param pResult Ranging Sensor
  * @param zones_per_line nombre de zone par ligne
- * @param detect         Détection de zone
+ * @param detect  Détection de zone
 */
 void sensor2matrix(RANGING_SENSOR_Result_t *pResult, uint8_t zones_per_line, DetectionZone_t* detect);
 
@@ -119,7 +133,17 @@ void print_2_matrix(int32_t matrix8x8_1[64], int32_t matrix8x8_2[64]);
 */
 void print_matrix_color(DetectionZone_t* detect_cur);
 
+/**
+ * @brief Afficher une matrice en couleur en fonction de la distance
+ * @param detect_cur une DetectionZone_t
+*/
 void print_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]);
+
+/**
+ * @brief Afficher les informations de l'animal
+ * @param animal structure de animal
+*/
+void print_animal(Animal_t* animal);
 
 /*************
  * Acquisition
@@ -156,17 +180,56 @@ void copy_matrix(uint32_t matrix8x8_dest[64], uint32_t matrix8x8_src[64]);
 */
 void copy_detection_zone(DetectionZone_t* detect_dest, DetectionZone_t* detect_src);
 
-
-/* Fonction pour l'animal */
-
-int8_t calcul_distance_centre(Animal_t* animal);
-float calcul_angle_direction(int8_t x_a, int8_t y_a, int8_t x_b, int8_t y_b);
-int8_t calcul_zone(int8_t x_b, int8_t y_b);
-int8_t check_angle_degre(int8_t zone, float angle_direction_degres);
-int8_t deplacement_animal(Animal_t* animal, int new_position);
-void print_animal(Animal_t* animal);
-
-
+/**
+ * @brief Construit le nom de la capture en fonction des données de la structure de détection zone
+ * @param detect_pre zone de détection
+ * @return le nom de la capture
+*/
 char* info_capture(DetectionZone_t* detect_pre);
+
+/*************
+ * Animal
+ *************/
+
+/**
+ * @brief Calcul la distance de l'animal par rapport au centre
+ * @param animal structure de animal
+ * @return la distance du l'animal
+*/
+int8_t calcul_distance_centre(Animal_t* animal);
+
+/**
+ * @brief Calcul l'angle de détection de l'animal par rapport à sa position N-1 et N
+ * @param x_a coordonnée x du point A (N-1)
+ * @param y_a coordonnée y du point A (N-1)
+ * @param x_b coordonnée x du point B (N)
+ * @param y_b coordonnée y du point B (N)
+ * @return l'angle de direction de l'animal
+*/
+float calcul_angle_direction(int8_t x_a, int8_t y_a, int8_t x_b, int8_t y_b);
+
+/**
+ * @brief Calcul dans quel zone du cercle trigonométrique se trouve la position N
+ * @param x_b coordonnée x du point B (N)
+ * @param y_b coordonnée y du point B (N)
+ * @return la zone trigonométrique du point
+*/
+int8_t calcul_zone(int8_t x_b, int8_t y_b);
+
+/**
+ * @brief Check si l'animal va risque de se rapprocher ou de s'éloigner du centre
+ * @param zone zone trigonométrique du point du point B (N)
+ * @param angle_direction_degres angle de direction de l'animal
+ * @retval le status de l'animal
+*/
+int8_t check_angle_degre(int8_t zone, float angle_direction_degres);
+
+/**
+ * @brief Met à jour la structure de l'animal en fonction de son déplacement
+ * @param animal structure de animal
+ * @param new_position nouvelle position de l'animal (N)
+ * @retval le status de l'animal
+*/
+int8_t deplacement_animal(Animal_t* animal, int new_position);
 
 #endif // DETECTION_ZONE_H

@@ -105,6 +105,13 @@ void print_trigonometric_matrix(Coordonnees_t trigonometric_matrix[64]) {
     }
 }
 
+void print_animal(Animal_t* animal) {
+    printf("Animal :\r\n");
+    printf("Position (N-1) : @%d  =>  Position (N) : @%d\r\n", animal->vec_movement[0], animal->vec_movement[1]);
+    printf("Distance au centre : %d\r\n", animal->distance_centre);
+    printf("Angle de direction : %f\r\n", animal->angle_direction);
+}
+
 /*********************** Fonction d'acquisition ***********************/
 
 int8_t check_evolution(DetectionZone_t* detect_pre, DetectionZone_t* detect_cur) {
@@ -283,6 +290,19 @@ void copy_detection_zone(DetectionZone_t* detect_dest, DetectionZone_t* detect_s
     copy_matrix(detect_dest->matrix_distance, detect_src->matrix_distance);
 }
 
+char* info_capture(DetectionZone_t* detect_pre) {
+    char name_capture[100];
+    
+    sprintf(name_capture, "capture_@%d_%ldmm_%d",
+            detect_pre->animal.vec_movement[0],
+            detect_pre->matrix_distance[detect_pre->animal.vec_movement[0]],
+            detect_pre->score);
+
+    char* copy_capture = strdup(name_capture);
+
+    return copy_capture;
+}
+
 /*********************** Fonction pour l'animal ***********************/
 
 int8_t calcul_distance_centre(Animal_t* animal) {
@@ -419,24 +439,3 @@ int8_t deplacement_animal(Animal_t* animal, int new_position) {
 
     return status;
 }
-
-void print_animal(Animal_t* animal) {
-    printf("Animal :\r\n");
-    printf("Position (N-1) : @%d  =>  Position (N) : @%d\r\n", animal->vec_movement[0], animal->vec_movement[1]);
-    printf("Distance au centre : %d\r\n", animal->distance_centre);
-    printf("Angle de direction : %f\r\n", animal->angle_direction);
-}
-
-char* info_capture(DetectionZone_t* detect_pre) {
-    char name_capture[100];
-    
-    sprintf(name_capture, "capture_@%d_%ldmm_%d.png",
-            detect_pre->animal.vec_movement[0],
-            detect_pre->matrix_distance[detect_pre->animal.vec_movement[0]],
-            detect_pre->score);
-
-    char* copy_capture = strdup(name_capture);
-
-    return copy_capture;
-}
-
