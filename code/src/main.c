@@ -164,7 +164,7 @@ int main(void)
       break;
     case CAPTURE:
       printf(BG_RED "ToF status : Capture the animal\r\n" RESET);
-      name_capture = print_info_capture(&detect);
+      name_capture = info_capture(&detect);
       printf("------------------------------\r\n");
       printf("Capture sauvegardée : %s\r\n", name_capture);
       printf("------------------------------\r\n");

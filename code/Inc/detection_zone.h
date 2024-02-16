@@ -167,6 +167,6 @@ int8_t deplacement_animal(Animal_t* animal, int new_position);
 void print_animal(Animal_t* animal);
 
 
-char* print_info_capture(DetectionZone_t* detect_pre);
+char* info_capture(DetectionZone_t* detect_pre);
 
 #endif // DETECTION_ZONE_H

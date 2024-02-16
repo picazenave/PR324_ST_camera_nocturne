@@ -427,13 +427,7 @@ void print_animal(Animal_t* animal) {
     printf("Angle de direction : %f\r\n", animal->angle_direction);
 }
 
-char* print_info_capture(DetectionZone_t* detect_pre) {
-    // printf("------------------------------\r\n");
-    // printf("Capture de l'animal :\r\n");
-    // printf("Score de la matrice ToF : %d\r\n", detect_pre->score);
-    // printf("Position de l'animal : %d\r\n", detect_pre->animal.vec_movement[0]);
-    // printf("Distance au centre : %d\r\n", detect_pre->animal.distance_centre);
-
+char* info_capture(DetectionZone_t* detect_pre) {
     char name_capture[100];
     
     sprintf(name_capture, "capture_@%d_%ldmm_%d.png",
@@ -441,15 +435,9 @@ char* print_info_capture(DetectionZone_t* detect_pre) {
             detect_pre->matrix_distance[detect_pre->animal.vec_movement[0]],
             detect_pre->score);
 
-    // printf("Nom de la capture : %s\r\n", name_capture);
-    // printf("------------------------------\r\n");
-
-    // return name_capture;
     char* copy_capture = strdup(name_capture);
+
     return copy_capture;
 }
 
-/*
-capture_position_positionmatrice_distancecentre_score.png
-*/
 
