@@ -19,7 +19,7 @@ uint32_t environment_matrix[TAILLE_MATRICE];
 
 Coordonnees_t trigonometric_matrix[TAILLE_MATRICE];
 
-/*********************** Fonction d'initialization ***********************/
+/*********************** Fonctions d'initialisation ***********************/
 
 void init_animal(Animal_t* animal) {
     animal->vec_movement[0] = -1;

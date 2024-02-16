@@ -12,15 +12,21 @@
 #include "stdio.h"
 #include "stdint.h"
 
-enum day_moment {JOUR, CREPUSCULE, NUIT};
+typedef enum 
+{
+  JOUR, 
+  CREPUSCULE, 
+  NUIT
+} day_moment_t;
 
-struct lumionsite {
+typedef struct
+{
   int light_sensor;
-  enum day_moment day_moment;
-};
+  day_moment_t day_moment;
+} Luminosite_t;
 
-void seed_light(struct lumionsite *lum);
-int seed_pir();
+int seed_light(Luminosite_t *lum);
+int is_movement();
 void bus_Scanning();
 uint8_t onsemi_pir();
 void debug_register();

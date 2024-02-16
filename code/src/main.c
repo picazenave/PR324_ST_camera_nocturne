@@ -140,6 +140,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   DetectionZone_t detect={.acquisition=0,.capture=0,.initialization=0};
+  Luminosite_t luminosite={.light_sensor=0, .day_moment=JOUR};
   uint32_t tick_count = 0;
   char* name_capture;
   
@@ -151,31 +152,43 @@ int main(void)
 
     // HAL_Delay(10);
     tick_count++;
-    int status = MX_VL53L5CX_ToF_Process(&detect);
-    switch (status)
+    if (seed_light(&luminosite) == JOUR)
     {
-    case INITIALISATION:
-      printf(BLUE "ToF status : Initialisation\r\n" RESET);
-      break;
-    case ACQUISITION:
-      printf(YELLOW "ToF status : Search an animal\r\n" RESET);
-      break;
-    case ANIMAL:
-      printf(GREEN "ToF status : Following an animal\r\n" RESET);
-      break;
-    case CAPTURE:
-      printf(BG_RED "ToF status : Capture the animal\r\n" RESET);
-      name_capture = info_capture(&detect);
-      printf("------------------------------\r\n");
-      printf("Capture sauvegardée : %s\r\n", name_capture);
-      printf("------------------------------\r\n");
-      free(name_capture);
-      break;
-    default:
-      printf(RED "ToF status : Error\r\n" RESET);
-      break;
+      printf("Il fait jour\r\n");
+      if (is_movement())
+      {
+        printf("Il y a du mouvement\r\n");
+        int status = MX_VL53L5CX_ToF_Process(&detect);
+        switch (status)
+        {
+        case INITIALISATION:
+          printf(BLUE "ToF status : Initialisation\r\n" RESET);
+          break;
+        case ACQUISITION:
+          printf(YELLOW "ToF status : Search an animal\r\n" RESET);
+          break;
+        case ANIMAL:
+          printf(GREEN "ToF status : Following an animal\r\n" RESET);
+          break;
+        case CAPTURE:
+          printf(BG_RED "ToF status : Capture the animal\r\n" RESET);
+          name_capture = info_capture(&detect);
+          printf("------------------------------\r\n");
+          printf("Capture sauvegardée : %s\r\n", name_capture);
+          printf("------------------------------\r\n");
+          free(name_capture);
+          break;
+        default:
+          printf(RED "ToF status : Error\r\n" RESET);
+          break;
+        }
+        printf("******************************\r\n");
+      }
+      else
+      {
+        printf("Il n'y a pas de mouvement\r\n");
+      }
     }
-    printf("******************************\r\n");
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

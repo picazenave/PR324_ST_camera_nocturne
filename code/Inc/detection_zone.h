@@ -40,7 +40,8 @@
 
 
 // Etat du statut
-typedef enum {
+typedef enum 
+{
     ERREUR = -1,
     INITIALISATION,
     ACQUISITION,
