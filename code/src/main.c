@@ -105,7 +105,21 @@ int main(void)
   MX_SPI1_Init();
   MX_FATFS_Init();
   MX_USART1_UART_Init();
+  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  char temp[200] = {0};
+  // printf("resetting\r\n");
+  // HAL_GPIO_WritePin(MODEM_RSTn_GPIO_Port, MODEM_RSTn_Pin, GPIO_PIN_RESET);
+  // HAL_Delay(300);
+  // HAL_GPIO_WritePin(MODEM_RSTn_GPIO_Port, MODEM_RSTn_Pin, GPIO_PIN_SET);
+  // HAL_Delay(300);
+  printf("listening\r\n");
+
+  init_nb_iot();
+
+  while (1)
+    ;
 #if 0
   /* Initialize the VL53L5CX sensor */
   HAL_GPIO_WritePin(TOF_PWR_EN_GPIO_Port, TOF_PWR_EN_Pin, GPIO_PIN_SET);
@@ -174,7 +188,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
   }
-  #endif
+#endif
   /* USER CODE END 3 */
 }
 
