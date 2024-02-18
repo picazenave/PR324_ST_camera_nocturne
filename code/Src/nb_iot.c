@@ -7,7 +7,7 @@
 
 #define TEMP_LEN 200
 
-// init nb iot, will reset if needed (will wait 3sec before init)
+// init nb iot, will reset if needed (will wait 5sec before init)
 HAL_StatusTypeDef init_nb_iot()
 {
     /**
@@ -22,7 +22,7 @@ HAL_StatusTypeDef init_nb_iot()
     uint8_t r = 0;
 start:
 
-    HAL_Delay(3000);
+    HAL_Delay(5000);
     wait_for_AT_ok();
 
     HAL_Delay(300);
