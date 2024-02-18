@@ -33,6 +33,11 @@
 #include "camera.h"
 #include "detection_zone.h"
 #include "app_tof.h"
+
+#define TOF_REPLAY
+#ifdef TOF_REPLAY
+#include "auto_gen.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +62,10 @@ volatile uint8_t uart2_tx_done = 0;
 volatile uint8_t uart1_rx_done = 0;
 volatile uint16_t ext_it = 0;
 
+static RANGING_SENSOR_Result_t Result;
+#ifndef TOF_REPLAY
 struct img_struct_t img_struct = {.img_buffer = {0}, .img_len = 0};
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,7 +110,7 @@ int main(void)
   MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
- // MX_I2C1_Init();
+  // MX_I2C1_Init();
   MX_SPI1_Init();
   MX_FATFS_Init();
   MX_USART1_UART_Init();
@@ -114,8 +122,8 @@ int main(void)
   // I2C reset pins set to Low,
   HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
   MX_VL53L5CX_ToF_Init();
-  
-#if 0
+
+#ifndef TOF_REPLAY
   HAL_StatusTypeDef status = HAL_ERROR;
 
   status = camera_init(0); // 0 not default config
@@ -125,6 +133,7 @@ int main(void)
   /**
    * Test jpg saving
    */
+  
   printf("\r\n=====Test jpg saving=====\r\n\r\n");
   printf(" get_camera_jpg  \r\n");
   status = get_camera_jpg(&img_struct);
@@ -141,16 +150,86 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  DetectionZone_t detect={.acquisition=0,.capture=0,.initialization=0};
+  // DetectionZone_t detect = {.acquisition = 0, .capture = 0, .initialization = 0};
   uint32_t tick_count = 0;
+
+  uint8_t possible_target_index[64];
+  uint8_t possible_target_i = 0;
+  for (uint8_t i = 0; i < 64; i++)
+    possible_target_index[i] = 255;
+
+  uint16_t background[64];
+  for (uint8_t i = 0; i < 64; i++)
+  {
+    if ((tof_data[i + 64] == 5 || tof_data[i + 64] == 9) && tof_data[i + 64 + 64] > 0)
+      background[i] = tof_data[i];
+    else
+      background[i] = 2550;
+  }
+
+  // to avoid first line used for background
+  tick_count = 1;
+  uint16_t threshold = 100;
+  uint8_t is_tracking = 0;
+  uint32_t last_tick = HAL_GetTick();
+
   while (1)
   {
-    // HAL_Delay(300);
-    if (tick_count % 1000 == 0)
-      HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
+    // int32_t status = 0;
+    // status = CUSTOM_RANGING_SENSOR_GetDistance(CUSTOM_VL53L5CX, &Result);
 
-    // HAL_Delay(10);
+    // if (status == BSP_ERROR_NONE)
+    // {
+    //   for(uint8_t i=0;i<64;i++)
+    //   printf("%ld,",(uint32_t)Result.ZoneResult[i].Distance[0]);
+
+    //   for(uint8_t i=0;i<64;i++)//print status
+    //   printf("%ld,",(uint32_t)Result.ZoneResult[i].Status[0]);
+      
+    //   Result.ZoneResult[i].NumberOfTargets
+    //   printf("\n\r");
+    // HAL_Delay(300);
+    // if (tick_count % 1000 == 0)
+    //   HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
+
+    uint16_t *p_data = tof_data[tick_count * (64 * 3)];
+    uint16_t *p_status = p_data + sizeof(uint16_t) * (64);
+    uint16_t *p_target = p_status + sizeof(uint16_t) * (64);
+
+    uint16_t temp = 0;
+    for (uint8_t i = 0; i < 64; i++)
+    {
+      temp = abs(background[i] - p_data[i]);
+      if ((temp > threshold) && (p_status[i] == 5 || p_status[i] == 9) && (p_target[i] > 0))
+      {
+        possible_target_index[possible_target_i] = i;
+        possible_target_i++;
+        is_tracking = 1;
+      }
+    }
+
+    uint16_t x = 0, y = 0;
+    uint16_t distance_to_center = 255;
+    if (is_tracking == 1)
+    {
+      // find center of mass in x,y
+      for (uint8_t i = 0; i < possible_target_i; i++)
+      {
+        x += possible_target_index[i] - (possible_target_index[i] / 8) * 8;
+        y += (possible_target_index[i] / 8);
+      }
+      x = x / possible_target_i;
+      y = y / possible_target_i;
+      // convert back to index
+      distance_to_center = distance_matrix[x + y * 8];
+    }
     tick_count++;
+
+    // transmit fps
+    printf("tick=%ld||counter=%ld||ms=%ld||distance=%d\r\n", HAL_GetTick(),tick_count, HAL_GetTick() - last_tick, distance_to_center);
+    last_tick=HAL_GetTick();
+
+#ifndef TOF_REPLAY
     int status = MX_VL53L5CX_ToF_Process(&detect);
     printf("******************************\r\n");
     switch (status)
@@ -172,6 +251,7 @@ int main(void)
       break;
     }
     printf("******************************\r\n");
+#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -227,7 +307,7 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  ext_it=GPIO_Pin;
+  ext_it = GPIO_Pin;
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)

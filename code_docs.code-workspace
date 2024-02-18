@@ -27,7 +27,8 @@
 			"custom_ranging_sensor.h": "c",
 			"custom_tof_conf.h": "c",
 			"stm32f4xx_nucleo_bus.h": "c",
-			"platform.h": "c"
+			"platform.h": "c",
+			"cstdlib": "c"
 		}
 	}
 }

@@ -58,11 +58,11 @@ with open('temp/auto_gen.h', 'w+') as outfile:
     outfile.write("};\n")
     
     #write raw TOF data
-    outfile.write("uint16_t distance_matrix[{size}]".format(size=(len(computed_data)*64))+" = {")
+    outfile.write("uint16_t tof_data[{size}]".format(size=(len(computed_data)*64))+" = {")
     for i in range(len(computed_data)):
         outfile.write("\n")
         for j in range(64):
-            outfile.write("{value},".format(value=computed_data[i,j]))
+            outfile.write("{value},".format(value=int(computed_data[i,j])))
     outfile.write("};\n")
 
     
@@ -95,7 +95,7 @@ time_loop=np.empty(end_counter)
 #init background
 background=np.empty(64,dtype=np.int16)
 for i in range(64):
-    if(my_status[counter][i]==0 or my_status[counter][i]==5 or my_status[counter][i]==6 or my_status[counter][i]==9 or my_status[counter][i]==10 or my_status[counter][i]==12 or my_status[counter][i]==13):
+    if(my_status[counter][i] in valid_status and my_nbtarget[counter][i]>0):
             background[i]=my_data_original[counter][i]
     else:
         background[i]=2550
@@ -204,8 +204,8 @@ while(True):
         p2= (int(x*square_size)+int(square_size/2),int(y*square_size+square_size/2)-20)
         i=4+4*8#center index
         p_center= (int(square_size*i-int(i/8)*square_size*8)+int(square_size/2),int(int(i/8)*square_size+square_size/2)-20)
-        cv2.arrowedLine(resized,p_center,p2,(255,0,255),thickness=2, line_type=8, shift=0)
-        cv2.circle(resized,p2, 50, (0,0,255), thickness=4, lineType=8, shift=0)
+        cv2.arrowedLine(resized,p_center,p2,(0,0,255),thickness=8, line_type=8, shift=0)
+        cv2.circle(resized,p2, 65, (0,0,255), thickness=8, lineType=8, shift=0)
         font                   = cv2.FONT_HERSHEY_SIMPLEX
         position               = (10,80)
         fontScale              = 3
