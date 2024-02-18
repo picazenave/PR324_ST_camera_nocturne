@@ -122,7 +122,30 @@ int main(void)
   // I2C reset pins set to Low,
   HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
   MX_VL53L5CX_ToF_Init();
+  printf("TOF init DONE\r\n");
+  /**
+   * Configure TOF
+   */
+  static RANGING_SENSOR_Capabilities_t Cap;
+  static RANGING_SENSOR_ProfileConfig_t Profile;
+  uint32_t Id;
+  int32_t status = 0;
 
+  CUSTOM_RANGING_SENSOR_ReadID(CUSTOM_VL53L5CX, &Id);
+  CUSTOM_RANGING_SENSOR_GetCapabilities(CUSTOM_VL53L5CX, &Cap);
+
+  // Profile.RangingProfile = RS_PROFILE_4x4_CONTINUOUS;
+  Profile.RangingProfile = RS_PROFILE_8x8_CONTINUOUS;
+  Profile.TimingBudget = 30; // TIMING_BUDGET;
+  Profile.Frequency = 15;    // RANGING_FREQUENCY; /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
+  Profile.EnableAmbient = 0; /* Enable: 1, Disable: 0 */
+  Profile.EnableSignal = 0;  /* Enable: 1, Disable: 0 */
+
+  /* set the profile if different from default one */
+  CUSTOM_RANGING_SENSOR_ConfigProfile(CUSTOM_VL53L5CX, &Profile);
+
+  status = CUSTOM_RANGING_SENSOR_Start(CUSTOM_VL53L5CX, VL53L5CX_MODE_BLOCKING_CONTINUOUS);
+  printf("TOF_ranging started\r\n");
 #ifndef TOF_REPLAY
   HAL_StatusTypeDef status = HAL_ERROR;
 
@@ -133,7 +156,7 @@ int main(void)
   /**
    * Test jpg saving
    */
-  
+
   printf("\r\n=====Test jpg saving=====\r\n\r\n");
   printf(" get_camera_jpg  \r\n");
   status = get_camera_jpg(&img_struct);
@@ -158,76 +181,93 @@ int main(void)
   for (uint8_t i = 0; i < 64; i++)
     possible_target_index[i] = 255;
 
+  /**
+   * Init background
+   */
+  printf("Waiting for background to stabilize\r\n");
   uint16_t background[64];
+  for (uint8_t i = 0; i < 5; i++) // 1.2sec
+  {
+    while (ext_it == 0)
+      ;
+    ext_it = 0;
+    status = CUSTOM_RANGING_SENSOR_GetDistance(CUSTOM_VL53L5CX, &Result);
+  }
+  printf("DONE\r\n");
+
   for (uint8_t i = 0; i < 64; i++)
   {
-    if ((tof_data[i + 64] == 5 || tof_data[i + 64] == 9) && tof_data[i + 64 + 64] > 0)
-      background[i] = tof_data[i];
+    if ((Result.ZoneResult[i].Status[0] == 5 || Result.ZoneResult[i].Status[0] == 9) && (Result.ZoneResult[i].NumberOfTargets > 0))
+      background[i] = Result.ZoneResult[i].Distance[0];
     else
       background[i] = 2550;
+
+    printf("[%d]=%d", i, background[i]);
   }
 
-  // to avoid first line used for background
-  tick_count = 1;
-  uint16_t threshold = 100;
+  printf("Background init DONE\r\n");
+
+  tick_count = 0;
+  uint16_t threshold = 200;
   uint8_t is_tracking = 0;
   uint32_t last_tick = HAL_GetTick();
 
   while (1)
   {
-    // int32_t status = 0;
-    // status = CUSTOM_RANGING_SENSOR_GetDistance(CUSTOM_VL53L5CX, &Result);
-
-    // if (status == BSP_ERROR_NONE)
-    // {
-    //   for(uint8_t i=0;i<64;i++)
-    //   printf("%ld,",(uint32_t)Result.ZoneResult[i].Distance[0]);
-
-    //   for(uint8_t i=0;i<64;i++)//print status
-    //   printf("%ld,",(uint32_t)Result.ZoneResult[i].Status[0]);
-      
-    //   Result.ZoneResult[i].NumberOfTargets
-    //   printf("\n\r");
+    while (ext_it == 0)
+      ; // wait for int to go low
+    ext_it = 0;
+    status = CUSTOM_RANGING_SENSOR_GetDistance(CUSTOM_VL53L5CX, &Result);
     // HAL_Delay(300);
     // if (tick_count % 1000 == 0)
     //   HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
-
-    uint16_t *p_data = tof_data[tick_count * (64 * 3)];
-    uint16_t *p_status = p_data + sizeof(uint16_t) * (64);
-    uint16_t *p_target = p_status + sizeof(uint16_t) * (64);
-
-    uint16_t temp = 0;
-    for (uint8_t i = 0; i < 64; i++)
+    if (status == BSP_ERROR_NONE)
     {
-      temp = abs(background[i] - p_data[i]);
-      if ((temp > threshold) && (p_status[i] == 5 || p_status[i] == 9) && (p_target[i] > 0))
+      int16_t temp = 0;
+      possible_target_i = 0;
+      uint8_t target_index = 0;
+      is_tracking=0;
+      for (uint8_t i = 0; i < 64; i++)
       {
-        possible_target_index[possible_target_i] = i;
-        possible_target_i++;
-        is_tracking = 1;
+        // ignore corners bc bigleux
+        if (i != 0 && i != 1 && i != 8 && i != 6 && i != 7 && i != 15 && i != 48 && i != 56 && i != 57 && i != 55 && i != 62 && i != 63)
+        {
+          //if temp is <0 then we have something behind the 2550 value wich is mostly noise or lucky sensing
+          temp = (int32_t)((int32_t)background[i] - (int32_t)Result.ZoneResult[i].Distance[0]);
+          if ((temp > threshold) && (Result.ZoneResult[i].Status[0] == 5 || Result.ZoneResult[i].Status[0] == 9) && (Result.ZoneResult[i].NumberOfTargets > 0))
+          {
+            //printf("[%d]=%d",i,temp);
+            possible_target_index[possible_target_i] = i;
+            possible_target_i++;
+            is_tracking = 1;
+          }
+        }
       }
-    }
 
-    uint16_t x = 0, y = 0;
-    uint16_t distance_to_center = 255;
-    if (is_tracking == 1)
-    {
-      // find center of mass in x,y
-      for (uint8_t i = 0; i < possible_target_i; i++)
+      uint16_t x = 0, y = 0;
+      uint16_t distance_to_center = 255;
+      if (is_tracking == 1)
       {
-        x += possible_target_index[i] - (possible_target_index[i] / 8) * 8;
-        y += (possible_target_index[i] / 8);
+        // find center of mass in x,y
+        for (uint8_t i = 0; i < possible_target_i; i++)
+        {
+          x += possible_target_index[i] - (possible_target_index[i] / 8) * 8;
+          y += (possible_target_index[i] / 8);
+        }
+        x = x / possible_target_i;
+        y = y / possible_target_i;
+        // convert back to index
+        distance_to_center = distance_matrix[x + y * 8];
+        target_index = x + y * 8;
       }
-      x = x / possible_target_i;
-      y = y / possible_target_i;
-      // convert back to index
-      distance_to_center = distance_matrix[x + y * 8];
-    }
-    tick_count++;
+      tick_count++;
 
-    // transmit fps
-    printf("tick=%ld||counter=%ld||ms=%ld||distance=%d\r\n", HAL_GetTick(),tick_count, HAL_GetTick() - last_tick, distance_to_center);
-    last_tick=HAL_GetTick();
+      // transmit fps
+      printf("tick=%ld||counter=%ld||ms=%ld||is_tracking=%d||distance=%d||target_index=%d||target_distance=%ld\r\n", HAL_GetTick(), tick_count, HAL_GetTick() - last_tick, is_tracking, distance_to_center, target_index, Result.ZoneResult[target_index].Distance[0]);
+      last_tick = HAL_GetTick();
+    }
+    else
+      printf("error BSP TOF\r\n");
 
 #ifndef TOF_REPLAY
     int status = MX_VL53L5CX_ToF_Process(&detect);
