@@ -28,7 +28,11 @@
 			"custom_tof_conf.h": "c",
 			"stm32f4xx_nucleo_bus.h": "c",
 			"platform.h": "c",
-			"cstdlib": "c"
+			"cstdlib": "c",
+			"app_tof.h": "c",
+			"adc.h": "c",
+			"tracking.h": "c",
+			"vl53l5cx.h": "c"
 		}
 	}
 }
