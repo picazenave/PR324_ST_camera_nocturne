@@ -226,7 +226,7 @@ while(True):
 
     cv2.imshow(window_name, resized)
     cv2.waitKey(1)  # it's needed, but no problem, it won't pause/wait
-    time.sleep(0.06)
+    time.sleep(1/15-(time.time()-start))#to maintain 15fps
     time_loop[counter]=time.time()-start
     counter=counter+1
     if counter == end_counter:
