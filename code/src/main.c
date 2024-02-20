@@ -62,9 +62,10 @@ volatile uint16_t ext_it = 0;
 
 RANGING_SENSOR_Result_t Result;
 struct target_t target_struct = {.target_distance_to_center = 255, .target_index = 0};
-#ifndef TOF_REPLAY
 struct img_struct_t img_struct = {.img_buffer = {0}, .img_len = 0};
-#endif
+
+
+#define CAMERA_CATPURE_THRESHOLD 5 // N*66ms averaging
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,7 +117,7 @@ int main(void)
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_StatusTypeDef status = HAL_ERROR;
-#ifndef TOF_REPLAY
+
   status = camera_init(0); // 0 not default config
   CHECK_HAL_STATUS_OR_PRINT(status);
   status = sd_init();
@@ -136,7 +137,6 @@ int main(void)
   status = send_jpg_uart2(&img_struct);
   CHECK_HAL_STATUS_OR_PRINT(status);
   printf("\r\n\r\n DONE  \r\n");
-#endif
 
   tracking_init_tof();
   tracking_init_background(&Result);
@@ -149,32 +149,61 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  Luminosite_t luminosite={.light_sensor=0, .day_moment=JOUR};
-  
+
+  /**
+   * Task priority : TOF -> Capture camera (& save) -> PIR & Light sensor
+   */
+
+  Luminosite_t luminosite = {.light_sensor = 0, .day_moment = JOUR};
   uint32_t tick_count = 0;
   uint32_t last_time = HAL_GetTick();
+  uint32_t last_time_PIR = HAL_GetTick();
+  uint32_t last_time_Lum = HAL_GetTick();
+  uint8_t camera_should_capture = 0; // used for averaging data
+  uint8_t PIR_set=0;
   while (1)
   {
     // HAL_Delay(300);
     // if (tick_count % 1000 == 0)
     //   HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
-    while (ext_it == 0)
-      ; // wait for int to go low
-    ext_it = 0;
 
-    status = tracking_get_target(&target_struct, &Result);
-    CHECK_HAL_STATUS_OR_PRINT(status);
-    printf("tick=%ld||counter=%ld||ms=%ld||is_tracking=%d||distance_center=%lf||target_index=%d||target_distance=%ld\r\n",
-           HAL_GetTick(), tick_count, HAL_GetTick() - last_time, target_struct.target_status == TRACKING,
-           target_struct.target_distance_to_center, target_struct.target_index,
-           Result.ZoneResult[target_struct.target_index].Distance[0]);
-
-    if (seed_light(&luminosite) == JOUR)
+    /**
+     * TOF task every 66ms
+     */
+    if (ext_it != 0)
     {
-      printf("Il fait jour\r\n");
+      ext_it = 0;
+      status = tracking_get_target(&target_struct, &Result);
+      CHECK_HAL_STATUS_OR_PRINT(status);
+      printf("tick=%ld||counter=%ld||ms=%ld||is_tracking=%d||distance_center=%lf||target_index=%d||target_distance=%ld\r\n",
+             HAL_GetTick(), tick_count, HAL_GetTick() - last_time, target_struct.target_status == TRACKING,
+             target_struct.target_distance_to_center, target_struct.target_index,
+             Result.ZoneResult[target_struct.target_index].Distance[0]);
+      // decision to capture or not
+      // TODO
+    }
+    else if (camera_should_capture > CAMERA_CATPURE_THRESHOLD)
+    {
+      /**
+       * Capture and Write jpeg on SD
+       */
+      // FIXME separate Capture and write on two tasks with DMA
+    }
+    else if (HAL_GetTick() - last_time_PIR)
+    {
+      last_time_PIR = HAL_GetTick();
       if (is_movement())
       {
         printf("Il fait mouvement\r\n");
+        PIR_set=1;
+      }
+    }
+    else if (HAL_GetTick() - last_time_Lum)
+    {
+      last_time_Lum = HAL_GetTick();
+      if (seed_light(&luminosite) == JOUR)
+      {
+        printf("Il fait jour\r\n");
       }
     }
     /* USER CODE END WHILE */
