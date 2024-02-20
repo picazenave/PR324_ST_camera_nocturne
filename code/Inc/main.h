@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.h
+ * @brief          : Header for main.c file.
+ *                   This file contains the common defines of the application.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2024 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -23,7 +23,8 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -32,15 +33,30 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32f4xx_hal_i2c.h"
-/* USER CODE END Includes */
+  /* USER CODE END Includes */
 
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
-struct img_struct_t
-{
+  /* Exported types ------------------------------------------------------------*/
+  /* USER CODE BEGIN ET */
+  struct img_struct_t
+  {
     uint8_t img_buffer[65535];
     uint16_t img_len;
-};
+  };
+
+  struct target_t
+  {
+    uint8_t target_index;
+    float target_distance_to_center;
+    uint8_t x;
+    uint8_t y;
+    uint8_t target_status;
+  };
+
+  enum target_status_t{
+    TRACKING,
+    TRACKING_SHOULD_CAPTURE,
+    NO_TARGET
+  };
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -52,19 +68,19 @@ struct img_struct_t
 /* USER CODE BEGIN EM */
 #define CHECK_HAL_STATUS_OR_PRINT(status) \
   if (status != HAL_OK)                   \
-    printf("lg:%d file:%s KO:0x%.2X \r\n", __LINE__,__FILE__, status);
-/* USER CODE END EM */
+    printf("lg:%d file:%s KO:0x%.2X \r\n", __LINE__, __FILE__, status);
+  /* USER CODE END EM */
 
-/* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(void);
+  /* Exported functions prototypes ---------------------------------------------*/
+  void Error_Handler(void);
 
-/* USER CODE BEGIN EFP */
-HAL_StatusTypeDef camera_init(uint8_t default_config);
-void i2c_scanner();
-HAL_StatusTypeDef save_picture_sd(struct img_struct_t *img_struct);
-HAL_StatusTypeDef sd_init();
-HAL_StatusTypeDef get_camera_jpg(struct img_struct_t *img_struct);
-HAL_StatusTypeDef send_jpg_uart2(struct img_struct_t *img_struct);
+  /* USER CODE BEGIN EFP */
+  HAL_StatusTypeDef camera_init(uint8_t default_config);
+  void i2c_scanner();
+  HAL_StatusTypeDef save_picture_sd(struct img_struct_t *img_struct);
+  HAL_StatusTypeDef sd_init();
+  HAL_StatusTypeDef get_camera_jpg(struct img_struct_t *img_struct);
+  HAL_StatusTypeDef send_jpg_uart2(struct img_struct_t *img_struct);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -95,7 +111,7 @@ HAL_StatusTypeDef send_jpg_uart2(struct img_struct_t *img_struct);
 
 /* USER CODE BEGIN Private defines */
 #define SD_SPI_HANDLE hspi1
-/* USER CODE END Private defines */
+  /* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }

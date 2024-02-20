@@ -31,9 +31,11 @@
 #include "stdio.h"
 #include <string.h>
 #include "camera.h"
-#include "detection_zone.h"
 #include "app_tof.h"
 #include "pir_lum.h"
+#include "tracking.h"
+
+#define TOF_REPLAY
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,8 +58,13 @@
 /* USER CODE BEGIN PV */
 volatile uint8_t uart2_tx_done = 0;
 volatile uint8_t uart1_rx_done = 0;
+volatile uint16_t ext_it = 0;
 
+RANGING_SENSOR_Result_t Result;
+struct target_t target_struct = {.target_distance_to_center = 255, .target_index = 0};
+#ifndef TOF_REPLAY
 struct img_struct_t img_struct = {.img_buffer = {0}, .img_len = 0};
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,96 +109,77 @@ int main(void)
   MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
- // MX_I2C1_Init();
+  // MX_I2C1_Init();
   MX_SPI1_Init();
   MX_FATFS_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  /* Initialize the VL53L5CX sensor */
-  HAL_GPIO_WritePin(TOF_PWR_EN_GPIO_Port, TOF_PWR_EN_Pin, GPIO_PIN_SET);
-  // LPn pins set to High,
-  HAL_GPIO_WritePin(TOF_LPn_C_GPIO_Port, TOF_LPn_C_Pin, GPIO_PIN_SET);
-  // I2C reset pins set to Low,
-  HAL_GPIO_WritePin(TOF_I2C1_RST_GPIO_Port, TOF_I2C1_RST_Pin, GPIO_PIN_RESET);
-  MX_VL53L5CX_ToF_Init();
+  HAL_StatusTypeDef status = HAL_ERROR;
+#ifndef TOF_REPLAY
+  status = camera_init(0); // 0 not default config
+  CHECK_HAL_STATUS_OR_PRINT(status);
+  status = sd_init();
+  CHECK_HAL_STATUS_OR_PRINT(status);
+  /**
+   * Test jpg saving
+   */
 
-  // HAL_StatusTypeDef status = HAL_ERROR;
+  printf("\r\n=====Test jpg saving=====\r\n\r\n");
+  printf(" get_camera_jpg  \r\n");
+  status = get_camera_jpg(&img_struct);
+  CHECK_HAL_STATUS_OR_PRINT(status);
+  printf(" save_picture_sd  \r\n");
+  status = save_picture_sd(&img_struct);
+  CHECK_HAL_STATUS_OR_PRINT(status);
+  printf(" send_jpg_uart2  \r\n");
+  status = send_jpg_uart2(&img_struct);
+  CHECK_HAL_STATUS_OR_PRINT(status);
+  printf("\r\n\r\n DONE  \r\n");
+#endif
 
-  // status = camera_init(0); // 0 not default config
-  // CHECK_HAL_STATUS_OR_PRINT(status);
-  // status = sd_init();
-  // CHECK_HAL_STATUS_OR_PRINT(status);
-  // /**
-  //  * Test jpg saving
-  //  */
-  // printf("\r\n=====Test jpg saving=====\r\n\r\n");
-  // printf(" get_camera_jpg  \r\n");
-  // status = get_camera_jpg(&img_struct);
-  // CHECK_HAL_STATUS_OR_PRINT(status);
-  // printf(" save_picture_sd  \r\n");
-  // status = save_picture_sd(&img_struct);
-  // CHECK_HAL_STATUS_OR_PRINT(status);
-  // printf(" send_jpg_uart2  \r\n");
-  // status = send_jpg_uart2(&img_struct);
-  // CHECK_HAL_STATUS_OR_PRINT(status);
-  // printf("\r\n\r\n DONE  \r\n");
+  tracking_init_tof();
+  tracking_init_background(&Result);
+
+  // TODO check no problem no init
+  //  for (uint8_t i = 0; i < 64; i++)
+  //    possible_target_index[i] = 255;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  DetectionZone_t detect={.acquisition=0,.capture=0,.initialization=0};
   Luminosite_t luminosite={.light_sensor=0, .day_moment=JOUR};
-  uint32_t tick_count = 0;
-  char* name_capture;
   
+  uint32_t tick_count = 0;
+  uint32_t last_time = HAL_GetTick();
   while (1)
   {
     // HAL_Delay(300);
-    if (tick_count % 1000 == 0)
-      HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
+    // if (tick_count % 1000 == 0)
+    //   HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
+    while (ext_it == 0)
+      ; // wait for int to go low
+    ext_it = 0;
 
-    // HAL_Delay(10);
-    tick_count++;
+    status = tracking_get_target(&target_struct, &Result);
+    CHECK_HAL_STATUS_OR_PRINT(status);
+    printf("tick=%ld||counter=%ld||ms=%ld||is_tracking=%d||distance_center=%lf||target_index=%d||target_distance=%ld\r\n",
+           HAL_GetTick(), tick_count, HAL_GetTick() - last_time, target_struct.target_status == TRACKING,
+           target_struct.target_distance_to_center, target_struct.target_index,
+           Result.ZoneResult[target_struct.target_index].Distance[0]);
+
     if (seed_light(&luminosite) == JOUR)
     {
       printf("Il fait jour\r\n");
       if (is_movement())
       {
-        printf("Il y a du mouvement\r\n");
-        int status = MX_VL53L5CX_ToF_Process(&detect);
-        switch (status)
-        {
-        case INITIALISATION:
-          printf(BLUE "ToF status : Initialisation\r\n" RESET);
-          break;
-        case ACQUISITION:
-          printf(YELLOW "ToF status : Search an animal\r\n" RESET);
-          break;
-        case ANIMAL:
-          printf(GREEN "ToF status : Following an animal\r\n" RESET);
-          break;
-        case CAPTURE:
-          printf(BG_RED "ToF status : Capture the animal\r\n" RESET);
-          name_capture = info_capture(&detect);
-          printf("------------------------------\r\n");
-          printf("Capture sauvegardée : %s\r\n", name_capture);
-          printf("------------------------------\r\n");
-          free(name_capture);
-          break;
-        default:
-          printf(RED "ToF status : Error\r\n" RESET);
-          break;
-        }
-        printf("******************************\r\n");
-      }
-      else
-      {
-        printf("Il n'y a pas de mouvement\r\n");
+        printf("Il fait mouvement\r\n");
       }
     }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    tick_count++;
   }
   /* USER CODE END 3 */
 }
@@ -242,6 +230,11 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  ext_it = GPIO_Pin;
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART1)

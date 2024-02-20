@@ -756,7 +756,7 @@ static int32_t vl53l5cx_get_result(VL53L5CX_Object_t *pObj, VL53L5CX_Result_t *p
         }
 
         target_status = data.target_status[(VL53L5CX_NB_TARGET_PER_ZONE * i) + j];
-        pResult->ZoneResult[i].Status[j] = vl53l5cx_map_target_status(target_status);
+        pResult->ZoneResult[i].Status[j] = target_status;//vl53l5cx_map_target_status(target_status);
       }
     }
 
@@ -770,7 +770,7 @@ static uint8_t vl53l5cx_map_target_status(uint8_t status)
 {
   uint8_t ret;
 
-  if ((status == 5U) || (status == 9U))
+  if ((status == 5U) )//|| (status == 9U))//FIXME
   {
     ret = 0U; /* ranging is OK */
   }

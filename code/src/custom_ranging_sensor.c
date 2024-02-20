@@ -53,7 +53,6 @@ int32_t CUSTOM_RANGING_SENSOR_Init(uint32_t Instance)
       ret=VL53L5CX_Probe(Instance);
         if (ret != BSP_ERROR_NONE)
         {
-          printf("BSP_ERROR_NO_INIT, ret=%d\r\n",ret);
           ret = BSP_ERROR_NO_INIT;
         }
         else

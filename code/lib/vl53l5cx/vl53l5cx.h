@@ -29,6 +29,7 @@ extern "C" {
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "vl53l5cx_api.h"
 #include "vl53l5cx_plugin_xtalk.h"

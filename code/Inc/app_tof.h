@@ -27,8 +27,8 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "detection_zone.h"
 #include "custom_ranging_sensor.h"
+
 
 /* Exported defines ----------------------------------------------------------*/
 /* #define USE_BARE_DRIVER */
@@ -40,7 +40,7 @@ extern "C" {
 
 /* Exported functions --------------------------------------------------------*/
 void MX_VL53L5CX_ToF_Init(void);
-int MX_VL53L5CX_ToF_Process(DetectionZone_t* detect);
+int MX_VL53L5CX_ToF_Process();
 
 #ifdef __cplusplus
 }
