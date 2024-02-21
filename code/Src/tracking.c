@@ -2,6 +2,7 @@
 #include "app_tof.h"
 #include "auto_gen.h"
 #include "stdio.h"
+#include "usart.h"
 
 extern volatile uint16_t ext_it;
 
@@ -10,6 +11,9 @@ uint8_t possible_target_index[64];
 uint8_t possible_target_i = 0;
 uint16_t threshold = 200;
 uint8_t is_tracking = 0;
+
+uint8_t tof_header[5] = {0xAA, 0x55, 0x32, 0x01, 0x21};
+extern volatile uint8_t uart2_tx_done;
 
 HAL_StatusTypeDef tracking_init_tof()
 {
@@ -83,6 +87,7 @@ HAL_StatusTypeDef tracking_init_background(RANGING_SENSOR_Result_t *Result)
 HAL_StatusTypeDef tracking_get_target(struct target_t *target_struct, RANGING_SENSOR_Result_t *Result)
 {
     HAL_StatusTypeDef status = CUSTOM_RANGING_SENSOR_GetDistance(CUSTOM_VL53L5CX, Result);
+    // printf("TOF[0]=%ld\r\n",(int32_t)Result->ZoneResult[0].Distance[0]);
     if (status == BSP_ERROR_NONE)
     {
         int16_t temp = 0;
@@ -98,14 +103,13 @@ HAL_StatusTypeDef tracking_get_target(struct target_t *target_struct, RANGING_SE
                 temp = (int32_t)((int32_t)background[i] - (int32_t)Result->ZoneResult[i].Distance[0]);
                 if ((temp > threshold) && (Result->ZoneResult[i].Status[0] == 5 || Result->ZoneResult[i].Status[0] == 9) && (Result->ZoneResult[i].NumberOfTargets > 0))
                 {
-                    // printf("[%d]=%d",i,temp);
+                    // printf("|[%d]=%d|",i,temp);
                     possible_target_index[possible_target_i] = i;
                     possible_target_i++;
                     is_tracking = 1;
                 }
             }
         }
-
         uint16_t x = 0, y = 0;
         if (is_tracking == 1)
         {
@@ -124,17 +128,63 @@ HAL_StatusTypeDef tracking_get_target(struct target_t *target_struct, RANGING_SE
             target_struct->y = y;
             target_struct->target_status = TRACKING;
         }
-        target_struct->target_distance_to_center = 255;
-        target_struct->target_index = 255;
-        target_struct->x = 255;
-        target_struct->y = 255;
-        target_struct->target_status = NO_TARGET;
+        else
+        {
+            target_struct->target_distance_to_center = 255;
+            target_struct->target_index = 255;
+            target_struct->x = 255;
+            target_struct->y = 255;
+            target_struct->target_status = NO_TARGET;
+        }
 
         return HAL_OK;
     }
     else
     {
         printf("error BSP TOF\r\n");
+        printf("error BSP TOF\r\n");
+        printf("error BSP TOF\r\n");
+        printf("error BSP TOF\r\n");
+        printf("error BSP TOF\r\n");
         return HAL_ERROR;
     }
+}
+
+HAL_StatusTypeDef tracking_send_tof_uart2(struct target_t *target_struct, RANGING_SENSOR_Result_t *Result)
+{
+    uint16_t uart2_timeout = 1000;
+    uint8_t to_transmit[64 * 3 + 3] = {0};
+
+    for (uint8_t i = 0; i < 64; i++)
+    {
+        if ((Result->ZoneResult[i].Status[0] == 5 || Result->ZoneResult[i].Status[0] == 9) && (Result->ZoneResult[i].NumberOfTargets > 0))
+        {
+            to_transmit[i] = Result->ZoneResult[i].Distance[0] / 10;
+        }
+        else
+            to_transmit[i] = 255;
+    }
+    for (uint8_t i = 64; i < 64 * 2; i++)
+    {
+        to_transmit[i] = Result->ZoneResult[i].Status[0];
+    }
+    for (uint8_t i = 64 * 2; i < 64 * 3; i++)
+    {
+        to_transmit[i] = Result->ZoneResult[i].NumberOfTargets;
+    }
+    to_transmit[64 * 3] = target_struct->x;
+    to_transmit[64 * 3 + 1] = target_struct->y;
+    to_transmit[64 * 3 + 2] = target_struct->target_status == TRACKING;
+
+    HAL_StatusTypeDef status;
+    status = HAL_UART_Transmit(&huart2, tof_header, sizeof(tof_header), uart2_timeout);
+    CHECK_HAL_STATUS_OR_PRINT(status);
+    status = HAL_UART_Transmit_DMA(&huart2, to_transmit, sizeof(to_transmit));
+    CHECK_HAL_STATUS_OR_PRINT(status);
+
+    // TODO make non blocking version
+    while (!uart2_tx_done)
+        ;
+    uart2_tx_done = 0;
+    return status;
 }

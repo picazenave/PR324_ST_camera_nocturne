@@ -64,8 +64,9 @@ RANGING_SENSOR_Result_t Result;
 struct target_t target_struct = {.target_distance_to_center = 255, .target_index = 0};
 struct img_struct_t img_struct = {.img_buffer = {0}, .img_len = 0};
 
-
 #define CAMERA_CATPURE_THRESHOLD 5 // N*66ms averaging
+#define PIR_CAPTURE_INTERVAL 500   // ms
+#define LUM_CAPTURE_INTERVAL 1000  // ms
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -160,7 +161,7 @@ int main(void)
   uint32_t last_time_PIR = HAL_GetTick();
   uint32_t last_time_Lum = HAL_GetTick();
   uint8_t camera_should_capture = 0; // used for averaging data
-  uint8_t PIR_set=0;
+  uint8_t PIR_set = 0;
   while (1)
   {
     // HAL_Delay(300);
@@ -175,12 +176,15 @@ int main(void)
       ext_it = 0;
       status = tracking_get_target(&target_struct, &Result);
       CHECK_HAL_STATUS_OR_PRINT(status);
-      printf("tick=%ld||counter=%ld||ms=%ld||is_tracking=%d||distance_center=%lf||target_index=%d||target_distance=%ld\r\n",
+      printf("tick=%ld||counter=%ld||ms=%ld||is_tracking=%d||distance_center=%f||target_index=%d||target_distance=%ld\r\n",
              HAL_GetTick(), tick_count, HAL_GetTick() - last_time, target_struct.target_status == TRACKING,
              target_struct.target_distance_to_center, target_struct.target_index,
-             Result.ZoneResult[target_struct.target_index].Distance[0]);
+             target_struct.target_status == TRACKING ? Result.ZoneResult[target_struct.target_index].Distance[0] : 255);
+      last_time = HAL_GetTick();
       // decision to capture or not
       // TODO
+      // send data
+      tracking_send_tof_uart2(&target_struct, &Result);
     }
     else if (camera_should_capture > CAMERA_CATPURE_THRESHOLD)
     {
@@ -189,21 +193,30 @@ int main(void)
        */
       // FIXME separate Capture and write on two tasks with DMA
     }
-    else if (HAL_GetTick() - last_time_PIR)
+    else if (HAL_GetTick() - last_time_PIR > PIR_CAPTURE_INTERVAL)
     {
       last_time_PIR = HAL_GetTick();
       if (is_movement())
       {
         printf("Il fait mouvement\r\n");
-        PIR_set=1;
+        PIR_set = 1;
+      }
+      else
+      {
+        printf("Il fait PAS mouvement\r\n");
+        PIR_set = 0;
       }
     }
-    else if (HAL_GetTick() - last_time_Lum)
+    else if (HAL_GetTick() - last_time_Lum > LUM_CAPTURE_INTERVAL)
     {
       last_time_Lum = HAL_GetTick();
       if (seed_light(&luminosite) == JOUR)
       {
         printf("Il fait jour\r\n");
+      }
+      else
+      {
+        printf("Il fait PAS jour\r\n");
       }
     }
     /* USER CODE END WHILE */
