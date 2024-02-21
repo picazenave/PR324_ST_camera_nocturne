@@ -56,7 +56,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile uint8_t uart2_tx_done = 0;
+volatile uint8_t uart2_tx_done = 1;
 volatile uint8_t uart1_rx_done = 0;
 volatile uint16_t ext_it = 0;
 
@@ -64,9 +64,10 @@ RANGING_SENSOR_Result_t Result;
 struct target_t target_struct = {.target_distance_to_center = 255, .target_index = 0};
 struct img_struct_t img_struct = {.img_buffer = {0}, .img_len = 0};
 
-#define CAMERA_CATPURE_THRESHOLD 5 // N*66ms averaging
-#define PIR_CAPTURE_INTERVAL 500   // ms
-#define LUM_CAPTURE_INTERVAL 1000  // ms
+#define CAMERA_CATPURE_THRESHOLD 5    // N*66ms averaging
+#define PIR_CAPTURE_INTERVAL 500      // ms
+#define LUM_CAPTURE_INTERVAL 1000     // ms
+#define CAMERA_CAPTURE_INTERVAL 30000 // ms
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -135,7 +136,7 @@ int main(void)
   status = save_picture_sd(&img_struct);
   CHECK_HAL_STATUS_OR_PRINT(status);
   printf(" send_jpg_uart2  \r\n");
-  status = send_jpg_uart2(&img_struct);
+  status = send_jpg_uart2(&img_struct, 1);
   CHECK_HAL_STATUS_OR_PRINT(status);
   printf("\r\n\r\n DONE  \r\n");
 
@@ -160,38 +161,75 @@ int main(void)
   uint32_t last_time = HAL_GetTick();
   uint32_t last_time_PIR = HAL_GetTick();
   uint32_t last_time_Lum = HAL_GetTick();
+  uint32_t last_time_camera = HAL_GetTick();
   uint8_t camera_should_capture = 0; // used for averaging data
   uint8_t PIR_set = 0;
+  float last_distance_to_center = 255.f;
+  uint8_t last_target_status = NO_TARGET;
   while (1)
   {
     // HAL_Delay(300);
-    // if (tick_count % 1000 == 0)
-    //   HAL_UART_Transmit(&huart2, (uint8_t *)"alive\r\n", 7, 100);
+    if (tick_count % 100 == 0)
+      printf("camera_should_capture=%d\r\n",camera_should_capture);
 
     /**
      * TOF task every 66ms
      */
-    if (ext_it != 0)
+    if (HAL_GetTick() - last_time_camera > CAMERA_CAPTURE_INTERVAL)
+    {
+      last_time_camera = HAL_GetTick();
+      // status = get_camera_jpg(&img_struct);
+      // CHECK_HAL_STATUS_OR_PRINT(status);
+      // // while (!uart2_tx_done)
+      // //   ;
+      // // uart2_tx_done = 0;
+      // status = send_jpg_uart2(&img_struct, 1);
+      // CHECK_HAL_STATUS_OR_PRINT(status);
+    }
+    else if (ext_it != 0)
     {
       ext_it = 0;
       status = tracking_get_target(&target_struct, &Result);
       CHECK_HAL_STATUS_OR_PRINT(status);
-      printf("tick=%ld||counter=%ld||ms=%ld||is_tracking=%d||distance_center=%f||target_index=%d||target_distance=%ld\r\n",
-             HAL_GetTick(), tick_count, HAL_GetTick() - last_time, target_struct.target_status == TRACKING,
-             target_struct.target_distance_to_center, target_struct.target_index,
-             target_struct.target_status == TRACKING ? Result.ZoneResult[target_struct.target_index].Distance[0] : 255);
+      // printf("tick=%ld||counter=%ld||ms=%ld||is_tracking=%d||distance_center=%f||target_index=%d||target_distance=%ld\r\n",
+      //        HAL_GetTick(), tick_count, HAL_GetTick() - last_time, target_struct.target_status == TRACKING,
+      //        target_struct.target_distance_to_center, target_struct.target_index,
+      //        target_struct.target_status == TRACKING ? Result.ZoneResult[target_struct.target_index].Distance[0] : 255);
       last_time = HAL_GetTick();
+
+      // send data
+      // while (!uart2_tx_done)
+      //   ;
+      // uart2_tx_done = 0;
+      tracking_send_tof_uart2(&target_struct, &Result, 1);
+      // status = get_camera_jpg(&img_struct);
+      // CHECK_HAL_STATUS_OR_PRINT(status);
+      // // while (!uart2_tx_done)
+      // //   ;
+      // // uart2_tx_done = 0;
+      // status = send_jpg_uart2(&img_struct, 1);
+      // CHECK_HAL_STATUS_OR_PRINT(status);
+
       // decision to capture or not
       // TODO
-      // send data
-      tracking_send_tof_uart2(&target_struct, &Result);
+      if (last_target_status == NO_TARGET && target_struct.target_status == TRACKING)
+        camera_should_capture = CAMERA_CATPURE_THRESHOLD;
+      if (last_distance_to_center < target_struct.target_distance_to_center)
+        camera_should_capture++;
+      last_target_status = target_struct.target_status;
     }
-    else if (camera_should_capture > CAMERA_CATPURE_THRESHOLD)
+    else if (camera_should_capture >= CAMERA_CATPURE_THRESHOLD)
     {
       /**
        * Capture and Write jpeg on SD
        */
       // FIXME separate Capture and write on two tasks with DMA
+      camera_should_capture = 0;
+      status = get_camera_jpg(&img_struct);
+      CHECK_HAL_STATUS_OR_PRINT(status);
+      printf(" save_picture_sd  \r\n");
+      status = save_picture_sd(&img_struct);
+      CHECK_HAL_STATUS_OR_PRINT(status);
     }
     else if (HAL_GetTick() - last_time_PIR > PIR_CAPTURE_INTERVAL)
     {

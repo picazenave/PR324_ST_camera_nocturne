@@ -49,8 +49,8 @@ HAL_StatusTypeDef camera_init(uint8_t default_config)
     HAL_Delay(1000);
     printf("RESET CAM DONE\r\n");
     uint8_t temp[200] = {0};
-    status = HAL_UART_Receive(&huart1, temp, 200, 500);//dont check this is to flush input buffer
-    //CHECK_HAL_STATUS_OR_PRINT(status);
+    status = HAL_UART_Receive(&huart1, temp, 200, 500); // dont check this is to flush input buffer
+    // CHECK_HAL_STATUS_OR_PRINT(status);
 
     if (default_config) // check if camera is already configured
     {
@@ -223,7 +223,7 @@ HAL_StatusTypeDef get_camera_jpg(struct img_struct_t *img_struct)
     return status;
 }
 
-HAL_StatusTypeDef send_jpg_uart2(struct img_struct_t *img_struct)
+HAL_StatusTypeDef send_jpg_uart2(struct img_struct_t *img_struct, uint8_t blocking)
 {
     uint16_t uart2_timeout = 1000;
     uint8_t to_transmit[2] = {0};
@@ -237,10 +237,14 @@ HAL_StatusTypeDef send_jpg_uart2(struct img_struct_t *img_struct)
     status = HAL_UART_Transmit_DMA(&huart2, img_struct->img_buffer, img_struct->img_len);
     CHECK_HAL_STATUS_OR_PRINT(status);
 
-    // TODO make non blocking version
-    while (!uart2_tx_done)
-        ;
-    uart2_tx_done = 0;
+    if (blocking)
+    {   
+        uart2_tx_done = 0;
+        while (!uart2_tx_done)
+            ;
+        //uart2_tx_done = 0;
+    }
+
     // for (u_int32_t i = 0; i < img_len; i++)
     //   printf("%.2X", img_buffer[i]);
     return status;

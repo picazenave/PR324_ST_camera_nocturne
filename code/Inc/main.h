@@ -80,7 +80,7 @@ extern "C"
   HAL_StatusTypeDef save_picture_sd(struct img_struct_t *img_struct);
   HAL_StatusTypeDef sd_init();
   HAL_StatusTypeDef get_camera_jpg(struct img_struct_t *img_struct);
-  HAL_StatusTypeDef send_jpg_uart2(struct img_struct_t *img_struct);
+  HAL_StatusTypeDef send_jpg_uart2(struct img_struct_t *img_struct,uint8_t blocking);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

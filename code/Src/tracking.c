@@ -150,7 +150,7 @@ HAL_StatusTypeDef tracking_get_target(struct target_t *target_struct, RANGING_SE
     }
 }
 
-HAL_StatusTypeDef tracking_send_tof_uart2(struct target_t *target_struct, RANGING_SENSOR_Result_t *Result)
+HAL_StatusTypeDef tracking_send_tof_uart2(struct target_t *target_struct, RANGING_SENSOR_Result_t *Result, uint8_t blocking)
 {
     uint16_t uart2_timeout = 1000;
     uint8_t to_transmit[64 * 3 + 3] = {0};
@@ -182,9 +182,12 @@ HAL_StatusTypeDef tracking_send_tof_uart2(struct target_t *target_struct, RANGIN
     status = HAL_UART_Transmit_DMA(&huart2, to_transmit, sizeof(to_transmit));
     CHECK_HAL_STATUS_OR_PRINT(status);
 
-    // TODO make non blocking version
-    while (!uart2_tx_done)
-        ;
-    uart2_tx_done = 0;
+    if (blocking)
+    {
+        uart2_tx_done = 0;
+        while (!uart2_tx_done)
+            ;
+        //uart2_tx_done = 0;
+    }
     return status;
 }
