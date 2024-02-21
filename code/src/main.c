@@ -118,8 +118,14 @@ int main(void)
 
   init_nb_iot();
 
+  char a[1] = {0};
   while (1)
-    ;
+  {
+    HAL_StatusTypeDef status = HAL_UART_Receive(&huart6, a, 1, 1000);
+    if (status == HAL_OK)
+      printf("%c", a[0]);
+  }
+
 #if 0
   /* Initialize the VL53L5CX sensor */
   HAL_GPIO_WritePin(TOF_PWR_EN_GPIO_Port, TOF_PWR_EN_Pin, GPIO_PIN_SET);
