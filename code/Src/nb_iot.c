@@ -67,7 +67,7 @@ start:
         {
             // need to reset and start again, module is unknow state
             printf("socketcreate real error pos=%d\r\n==========%s\r\n=========\r\n", r, temp);
-            reset_nb_iot();
+            // reset_nb_iot();
             HAL_Delay(1000);
             goto start;
         }
@@ -79,7 +79,10 @@ start:
         HAL_Delay(100);
     }
     // send notification
-    nb_iot_send_msg((uint8_t*)"NB_IOT init done", 16);
+    nb_iot_send_msg((uint8_t *)"NB_IOT init done", 16);
+
+    // send notification
+    nb_iot_send_msg((uint8_t *)"NB_IOT init done", 16);
 
     printf("NB IOT Init DONE\r\n");
 
@@ -150,7 +153,10 @@ uint16_t estimate_AT_msg_size(uint8_t *msg, uint16_t len)
         if (i + 1 < len)
         {
             if (msg[i] == '\r' && msg[i + 1] == '\n')
+            {
                 local_end = i + 1 + 1;
+                // msg[local_end]='\0';
+            }
         }
     }
     return local_end;
@@ -161,6 +167,17 @@ uint8_t compare_AT_with_expected(uint8_t *expected_msg, uint8_t *msg, uint16_t e
 {
     if (expected_msg_len > msg_len)
         return 255;
+
+    // remove CR LF for strstr
+    char temp[TEMP_LEN] = {0};
+    for (uint16_t i = 0; i < TEMP_LEN - 2; i++)
+    {
+        temp[i] = expected_msg[i + 2];
+    }
+    temp[expected_msg_len - 2] = 0;
+
+    if (strstr(msg, temp) != NULL)
+        return 0;
 
     for (uint16_t i = 0; i < expected_msg_len; i++)
     {

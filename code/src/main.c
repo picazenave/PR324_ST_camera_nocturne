@@ -34,6 +34,7 @@
 #include "app_tof.h"
 #include "pir_lum.h"
 #include "tracking.h"
+//#include "nb_iot.h"
 
 #define TOF_REPLAY
 /* USER CODE END Includes */
@@ -64,7 +65,7 @@ RANGING_SENSOR_Result_t Result;
 struct target_t target_struct = {.target_distance_to_center = 255, .target_index = 0};
 struct img_struct_t img_struct = {.img_buffer = {0}, .img_len = 0};
 
-#define CAMERA_CATPURE_THRESHOLD 3   // N*66ms averaging
+#define CAMERA_CATPURE_THRESHOLD 8    // N*66ms averaging
 #define PIR_CAPTURE_INTERVAL 500      // ms
 #define LUM_CAPTURE_INTERVAL 30000    // ms
 #define CAMERA_CAPTURE_INTERVAL 30000 // ms
@@ -119,7 +120,8 @@ int main(void)
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_StatusTypeDef status = HAL_ERROR;
-
+  status = init_nb_iot();
+  CHECK_HAL_STATUS_OR_PRINT(status);
   status = camera_init(0); // 0 not default config
   CHECK_HAL_STATUS_OR_PRINT(status);
   status = sd_init();
@@ -252,21 +254,25 @@ int main(void)
       printf(" save_picture_sd  \r\n");
       status = save_picture_sd(&img_struct);
       CHECK_HAL_STATUS_OR_PRINT(status);
+      nb_iot_send_msg((uint8_t *)"NB_IOT capture done", 19);
     }
 
     if (HAL_GetTick() - last_time_PIR > PIR_CAPTURE_INTERVAL)
     {
       last_time_PIR = HAL_GetTick();
       last_PIR_set = PIR_set;
+
       if (is_movement())
       {
-        printf("Il fait mouvement\r\n");
         PIR_set = 1;
       }
       else
       {
-        printf("Il fait PAS mouvement\r\n");
         PIR_set = 0;
+      }
+      if (last_PIR_set != PIR_set)
+      {
+        printf("PIR changed PIR_set=%d", PIR_set);
       }
     }
 
