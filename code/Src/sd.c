@@ -102,10 +102,12 @@ HAL_StatusTypeDef save_picture_sd(struct img_struct_t *img_struct)
     if (fres == FR_OK)
     {
         printf("Wrote %i bytes to %s!\r\n", bytesWrote, jpg_name);
+        status=HAL_OK;
     }
     else
     {
         printf("f_write error (%i)\r\n", fres);
+        status=HAL_ERROR;
     }
     f_close(&fil);
 

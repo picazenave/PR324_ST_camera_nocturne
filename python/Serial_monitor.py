@@ -37,15 +37,17 @@ window_name='Tof matrix'
 im_tof = np.zeros((1600,1600,3), np.uint8)
 im_camera = np.zeros((1600,1600,3), np.uint8)
 
-ser = serial.Serial('COM7', 2000000)
+ser = serial.Serial('COM9', 2000000)
 print(ser.name)
 ser.reset_input_buffer()
 ser.reset_output_buffer()
 
 cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-
+start=time.time()
 while(True):
-
+    
+    
+    
     s=ser.read_all()
     size_s=len(s)
     if(size_s>0):
@@ -54,7 +56,7 @@ while(True):
     while i<len(s):#try to find jpg_header
         if(i+5<len(s)):
             if(is_jpg_header(s[i:i+5])):
-                #print(bcolors.OKCYAN + "[PYTHON]"+bcolors.ENDC+"header_jpeg=0x"+' 0x'.join(format(x, '02x') for x in s[i:i+5]))
+                print(bcolors.OKCYAN + "[PYTHON]"+bcolors.ENDC+"header_jpeg=0x"+' 0x'.join(format(x, '02x') for x in s[i:i+5]))
                 i=i+5
                 #print(bcolors.OKCYAN + "[PYTHON]"+bcolors.ENDC+"après header+jpg=0x"+' 0x'.join(format(x, '02x') for x in s[i:i+5]))
                 im_len=int.from_bytes([s[i],s[i+1]],"big")
@@ -85,17 +87,20 @@ while(True):
                     print(bcolors.FAIL + "[PYTHON]"+bcolors.ENDC+"cv2 decode error")
                 i=i+im_len
             elif(is_tof_header(s[i:i+5])):
+                #print("time loop=",time.time()-start)
+                start=time.time()
                 #print(bcolors.OKCYAN + "[PYTHON]"+bcolors.ENDC+"header_tof=0x"+' 0x'.join(format(x, '02x') for x in s[i:i+5]))
                 i=i+5
                 #print(bcolors.OKCYAN + "[PYTHON]"+bcolors.ENDC+"après header+tof=0x"+' 0x'.join(format(x, '02x') for x in s[i:i+5]))
                 #receive tof data
                 bytes_received=size_s-i #part of tof already received
                 to_be_received=64*3+3-bytes_received
-                #print(bcolors.OKGREEN + "[PYTHON]"+bcolors.ENDC+"to_be_received="+str(to_be_received)+"|in waiting="+str(ser.in_waiting))
+                #print(bcolors.OKGREEN + "[PYTHON]"+bcolors.ENDC+"to_be_received="+str(to_be_received)+"|bytes_received="+str(bytes_received)+"|in waiting="+str(ser.in_waiting))
                 s_array: bytearray
                 s_array=[]
                 s_array.extend(s[i:])#add received part
                 s=ser.read(to_be_received)
+                
                 s_array.extend(s)
                 s_byte=np.frombuffer(bytes(s_array),dtype=np.uint8)
 

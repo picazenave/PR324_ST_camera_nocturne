@@ -39,7 +39,7 @@ HAL_StatusTypeDef tracking_init_tof()
 
     // Profile.RangingProfile = RS_PROFILE_4x4_CONTINUOUS;
     Profile.RangingProfile = RS_PROFILE_8x8_CONTINUOUS;
-    Profile.TimingBudget = 30; // TIMING_BUDGET;
+    Profile.TimingBudget = 50; // TIMING_BUDGET;
     Profile.Frequency = 15;    // RANGING_FREQUENCY; /* Ranging frequency Hz (shall be consistent with TimingBudget value) */
     Profile.EnableAmbient = 0; /* Enable: 1, Disable: 0 */
     Profile.EnableSignal = 0;  /* Enable: 1, Disable: 0 */

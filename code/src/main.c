@@ -64,9 +64,9 @@ RANGING_SENSOR_Result_t Result;
 struct target_t target_struct = {.target_distance_to_center = 255, .target_index = 0};
 struct img_struct_t img_struct = {.img_buffer = {0}, .img_len = 0};
 
-#define CAMERA_CATPURE_THRESHOLD 5    // N*66ms averaging
+#define CAMERA_CATPURE_THRESHOLD 3   // N*66ms averaging
 #define PIR_CAPTURE_INTERVAL 500      // ms
-#define LUM_CAPTURE_INTERVAL 1000     // ms
+#define LUM_CAPTURE_INTERVAL 30000    // ms
 #define CAMERA_CAPTURE_INTERVAL 30000 // ms
 /* USER CODE END PV */
 
@@ -135,9 +135,9 @@ int main(void)
   printf(" save_picture_sd  \r\n");
   status = save_picture_sd(&img_struct);
   CHECK_HAL_STATUS_OR_PRINT(status);
-  printf(" send_jpg_uart2  \r\n");
-  status = send_jpg_uart2(&img_struct, 1);
-  CHECK_HAL_STATUS_OR_PRINT(status);
+  // printf(" send_jpg_uart2  \r\n");
+  // status = send_jpg_uart2(&img_struct, 1);
+  // CHECK_HAL_STATUS_OR_PRINT(status);
   printf("\r\n\r\n DONE  \r\n");
 
   tracking_init_tof();
@@ -164,13 +164,14 @@ int main(void)
   uint32_t last_time_camera = HAL_GetTick();
   uint8_t camera_should_capture = 0; // used for averaging data
   uint8_t PIR_set = 0;
+  uint8_t last_PIR_set = 0;
   float last_distance_to_center = 255.f;
   uint8_t last_target_status = NO_TARGET;
   while (1)
   {
     // HAL_Delay(300);
-    if (tick_count % 100 == 0)
-      printf("camera_should_capture=%d\r\n",camera_should_capture);
+    // if (tick_count % 100 == 0)
+    //   printf("camera_should_capture=%d\r\n", camera_should_capture);
 
     /**
      * TOF task every 66ms
@@ -186,7 +187,8 @@ int main(void)
       // status = send_jpg_uart2(&img_struct, 1);
       // CHECK_HAL_STATUS_OR_PRINT(status);
     }
-    else if (ext_it != 0)
+
+    if (ext_it != 0)
     {
       ext_it = 0;
       status = tracking_get_target(&target_struct, &Result);
@@ -198,6 +200,8 @@ int main(void)
       last_time = HAL_GetTick();
 
       // send data
+      // if(!uart2_tx_done)
+      // printf("DMA TX WASNT DONE uart2_tx_done=%d\r\n",uart2_tx_done);
       // while (!uart2_tx_done)
       //   ;
       // uart2_tx_done = 0;
@@ -211,19 +215,37 @@ int main(void)
       // CHECK_HAL_STATUS_OR_PRINT(status);
 
       // decision to capture or not
-      // TODO
-      if (last_target_status == NO_TARGET && target_struct.target_status == TRACKING)
-        camera_should_capture = CAMERA_CATPURE_THRESHOLD;
-      if (last_distance_to_center < target_struct.target_distance_to_center)
-        camera_should_capture++;
-      last_target_status = target_struct.target_status;
+      // only capture with pir to avoid reflections on tof
+      if (PIR_set == 1 || last_PIR_set == 1)
+      {
+        if (last_target_status == NO_TARGET && target_struct.target_status == TRACKING)
+        {
+          camera_should_capture = CAMERA_CATPURE_THRESHOLD;
+          printf("Acquired target, should capture\r\n");
+          printf("== BEGIN TRACKING ==\r\n");
+        }
+        last_target_status = target_struct.target_status;
+      }
+      // PIR will loose tracking if not much movement
+      if (last_target_status == TRACKING && target_struct.target_status == TRACKING)
+      {
+        if (last_distance_to_center < target_struct.target_distance_to_center)
+        {
+          camera_should_capture++;
+          printf("Moving away should capture=%d\r\n", camera_should_capture);
+        }
+        last_distance_to_center = target_struct.target_distance_to_center;
+        last_target_status = target_struct.target_status;
+      }
     }
-    else if (camera_should_capture >= CAMERA_CATPURE_THRESHOLD)
+
+    if (camera_should_capture >= CAMERA_CATPURE_THRESHOLD)
     {
       /**
        * Capture and Write jpeg on SD
        */
       // FIXME separate Capture and write on two tasks with DMA
+      printf("CAPTURE TASK : should capture=%d", camera_should_capture);
       camera_should_capture = 0;
       status = get_camera_jpg(&img_struct);
       CHECK_HAL_STATUS_OR_PRINT(status);
@@ -231,9 +253,11 @@ int main(void)
       status = save_picture_sd(&img_struct);
       CHECK_HAL_STATUS_OR_PRINT(status);
     }
-    else if (HAL_GetTick() - last_time_PIR > PIR_CAPTURE_INTERVAL)
+
+    if (HAL_GetTick() - last_time_PIR > PIR_CAPTURE_INTERVAL)
     {
       last_time_PIR = HAL_GetTick();
+      last_PIR_set = PIR_set;
       if (is_movement())
       {
         printf("Il fait mouvement\r\n");
@@ -245,7 +269,8 @@ int main(void)
         PIR_set = 0;
       }
     }
-    else if (HAL_GetTick() - last_time_Lum > LUM_CAPTURE_INTERVAL)
+
+    if (HAL_GetTick() - last_time_Lum > LUM_CAPTURE_INTERVAL)
     {
       last_time_Lum = HAL_GetTick();
       if (seed_light(&luminosite) == JOUR)
