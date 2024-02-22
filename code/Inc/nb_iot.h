@@ -13,7 +13,7 @@ void reset_nb_iot();
 HAL_StatusTypeDef _send_msg(uint8_t msg[]);
 HAL_StatusTypeDef nb_iot_send_msg(uint8_t msg[], uint8_t len);
 void wait_for_AT_ok();
-
+HAL_StatusTypeDef init_nb_iot();
 
 
 #endif

@@ -2,7 +2,6 @@
 #include "fatfs.h"
 #include "stdio.h"
 #include <string.h>
-#include "main.h"
 #include "nb_iot.h"
 
 #define TEMP_LEN 200
@@ -81,9 +80,6 @@ start:
     // send notification
     nb_iot_send_msg((uint8_t *)"NB_IOT init done", 16);
 
-    // send notification
-    nb_iot_send_msg((uint8_t *)"NB_IOT init done", 16);
-
     printf("NB IOT Init DONE\r\n");
 
     return HAL_OK;
@@ -110,15 +106,16 @@ HAL_StatusTypeDef nb_iot_send_msg(uint8_t msg[], uint8_t len)
 HAL_StatusTypeDef _send_msg(uint8_t msg[])
 {
     uint8_t temp[TEMP_LEN] = {0};
-    uint16_t r = snprintf(temp, TEMP_LEN, "AT#IPSENDUDP=5,0,90.50.33.140,20001,0,0,%s\r", msg);
+    uint16_t r = snprintf((char *)temp, TEMP_LEN, "AT#IPSENDUDP=5,0,90.50.33.140,20001,0,0,%s\r", msg);
     HAL_UART_Transmit(&huart6, temp, r, 100);
-    HAL_UART_Receive(&huart6, temp, TEMP_LEN, 5000);
+    HAL_UART_Receive(&huart6, temp, TEMP_LEN, 1000);
     uint16_t msg_len = estimate_AT_msg_size(temp, TEMP_LEN);
     printf("msg_len=%d\r\n", msg_len);
     // fill end of msg with 0 for printing
     for (uint16_t i = msg_len; i < TEMP_LEN; i++)
         temp[i] = 0;
     printf("answer from send notif=\r\n==========%s\r\n=========\r\n", temp);
+    return HAL_OK;
 }
 
 void wait_for_AT_ok()
@@ -176,7 +173,7 @@ uint8_t compare_AT_with_expected(uint8_t *expected_msg, uint8_t *msg, uint16_t e
     }
     temp[expected_msg_len - 2] = 0;
 
-    if (strstr(msg, temp) != NULL)
+    if (strstr((char *)msg, temp) != NULL)
         return 0;
 
     for (uint16_t i = 0; i < expected_msg_len; i++)
