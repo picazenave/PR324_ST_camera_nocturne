@@ -65,7 +65,7 @@ RANGING_SENSOR_Result_t Result;
 struct target_t target_struct = {.target_distance_to_center = 255, .target_index = 0};
 struct img_struct_t img_struct = {.img_buffer = {0}, .img_len = 0};
 
-#define CAMERA_CATPURE_THRESHOLD 8    // N*66ms averaging
+#define CAMERA_CATPURE_THRESHOLD 4    // N*66ms averaging
 #define PIR_CAPTURE_INTERVAL 500      // ms
 #define LUM_CAPTURE_INTERVAL 30000    // ms
 #define CAMERA_CAPTURE_INTERVAL 30000 // ms
@@ -234,6 +234,11 @@ int main(void)
         if (last_distance_to_center < target_struct.target_distance_to_center)
         {
           camera_should_capture++;
+          printf("Moving away should capture=%d\r\n", camera_should_capture);
+        }else if (last_distance_to_center > target_struct.target_distance_to_center)
+        {
+          if(camera_should_capture>0 && camera_should_capture != CAMERA_CATPURE_THRESHOLD)
+          camera_should_capture--;
           printf("Moving away should capture=%d\r\n", camera_should_capture);
         }
         last_distance_to_center = target_struct.target_distance_to_center;

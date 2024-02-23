@@ -37,7 +37,7 @@ window_name='Tof matrix'
 im_tof = np.zeros((1600,1600,3), np.uint8)
 im_camera = np.zeros((1600,1600,3), np.uint8)
 
-ser = serial.Serial('COM9', 2000000)
+ser = serial.Serial('COM7', 2000000)
 print(ser.name)
 ser.reset_input_buffer()
 ser.reset_output_buffer()
